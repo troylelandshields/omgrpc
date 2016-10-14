@@ -1,4 +1,3 @@
-#! /usr/bin/env node
 var cc   = require('./lib/utils')
 var join = require('path').join
 var deepExtend = require('deep-extend')

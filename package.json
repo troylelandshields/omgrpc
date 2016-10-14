@@ -11,47 +11,19 @@
     "type": "git",
     "url": "git://github.com/vhpoet/frontend-boilerplate.git"
   },
-  "node-remote": "http://localhost:3000",
-  "main": "http://localhost:3000",
+  "main": "app/index.html",
   "window": {
     "frame": true,
     "toolbar": true
   },
   "readmeFilename": "README",
   "devDependencies": {
-    "browser-sync": "^1.8.3",
-    "connect-modrewrite": "^0.7.9",
-    "del": "^1.1.1",
-    "gulp": "~3.8.10",
-    "gulp-csso": "^0.2.9",
-    "gulp-if": "^1.2.5",
-    "gulp-jade": "^1.0.0",
-    "gulp-jade-find-affected": "^0.2.1",
-    "gulp-livereload": "~2.1.1",
-    "gulp-load-plugins": "^0.8.0",
-    "gulp-minify-html": "^0.1.8",
-    "gulp-ng-annotate": "^0.4.3",
-    "gulp-protractor": "0.0.12",
-    "gulp-rev": "^2.0.1",
-    "gulp-rev-replace": "^0.3.1",
-    "gulp-ruby-sass": "~1.0.0-alpha",
-    "gulp-size": "^1.2.0",
-    "gulp-sourcemaps": "^1.3.0",
-    "gulp-uglify": "~1.0.1",
-    "gulp-useref": "^1.1.0",
-    "gulp-watch": "^4.2.4",
-    "gulp-zip": "^3.0.2",
-    "jade": "^1.9.2",
-    "json-loader": "^0.5.1",
-    "merge-stream": "^1.0.0",
-    "nw-builder": "^2.0.2",
-    "protractor": "^1.5.0",
-    "webpack-stream": "~2.1.0",
-    "wiredep": "^2.2.2"
+    "nw-builder": "^2.0.2"
   },
   "dependencies": {
     "angular": "^1.4.4",
     "angular-ui-router": "^0.2.15",
+    "aws-sdk": "^2.6.9",
     "bootstrap": "^3.3.5",
     "jquery": "^2.1.4"
   }
