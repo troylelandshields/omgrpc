@@ -1,0 +1,5 @@
+<div ng-controller="NewController as vm">
+    <input type="text" placeholder="127.0.0.1:6565" ng-model="vm.newConnection.address" value="127.0.0.1:6565"></input>  
+    <input id="proto-file" type="file"/>
+    <input type="submit" ng-click="vm.connect(vm.newConnection)" value="Connect"></input>
+</div>

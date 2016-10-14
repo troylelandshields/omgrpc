@@ -21,7 +21,11 @@
         <!--<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon"/><link rel="icon" href="images/favicon.ico" type="image/x-icon"/>-->
     </head>
     <body>
-        <header></header>
+        <div class="nav">
+            <div class="btn-group-vertical" role="group">
+                <button type="button" class="btn btn-default" ui-sref="new">New Client</button>
+            </div>
+        </div>
         <div class="container">
             <div class="page-header">
                 <h1>Frontend Boilerplate</h1>
@@ -49,6 +53,8 @@
     <script src="scripts/entry.js"></script>
     <script src="scripts/app.controller.js"></script>
     <script src="scripts/about.controller.js"></script>
+    <script src="scripts/new.controller.js"></script>
+    <script src="scripts/grpc.service.js"></script>
     <!--<script src="scripts/grpcdefiniton.service.js"></script>-->
     <!-- endinject -->
     <!-- endbuild -->
