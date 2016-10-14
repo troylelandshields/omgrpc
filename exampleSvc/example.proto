@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package exampleSvc;
+
+service ExampleService {
+  rpc SayHello(SayRequest) returns (SayReply) {}
+}
+
+message SayRequest {
+  string sayWhat = 1;
+}
+
+message SayReply {
+  string saidWhat = 1;
+}
