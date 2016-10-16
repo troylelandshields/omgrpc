@@ -65,6 +65,31 @@ function GrpcSvc() {
         return state.servicesByServiceID[serviceID];
     }
 
+    function parseResolvedType(grpcType) {
+        var fields = grpcType._fields.map(function(f){
+            var t
+            if (f.resolvedType) {
+                t = parseResolvedType(f.resolvedType);
+            } else {
+                t = f.type.name;
+            }
+
+            return {
+                name: f.name,
+                type: t
+            }
+        });
+
+        return {
+            fields: fields,
+            typeName: grpcType.name
+        }
+    }
+
+    function parseArgument(grpcMethod) {
+        
+    }
+
     function createClient(serviceID, addr) {
         var svc = getService(serviceID);
 
@@ -75,11 +100,36 @@ function GrpcSvc() {
 
         client.methods = [];
 
+        var methodCache = {};
+
         for(var p in client) {
             if(typeof client[p] === "function") {
-                client.methods.push(p);
+                methodCache[p.toLowerCase()] = {
+                    name: p
+                };
+                // client.methods.push();
+                // debugger;
             }
         }
+
+        svc.client.service.children.forEach(function(child){
+            if (child.className==="Service.RPCMethod") {
+                var m = methodCache[child.name.toLowerCase()]
+
+                if (!m) {
+                    console.log("Couldn't find method on client", child.name)
+                    return
+                }
+
+                m.requestType = {};
+
+                m.requestType = parseResolvedType(child.resolvedRequestType);
+                m.responseType = parseResolvedType(child.resolvedResponseType);
+
+                client.methods.push(m);
+            }
+        });
+
 
         return client;
     }

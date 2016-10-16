@@ -6,15 +6,15 @@
 
     <div>
         <span ng-repeat="method in vm.client.methods">
-            <button ng-if="method==vm.method.name" disabled type="button" class="btn-small btn-primary" ng-click="vm.setMethod(method)">{{method}}</button>
-            <button ng-if="method!=vm.method.name" type="button" class="btn-small btn-default disabled" ng-click="vm.setMethod(method)">{{method}}</button>
+            <button ng-if="method==vm.method.name" disabled type="button" class="btn-small btn-primary" ng-click="vm.setMethod(method)">{{method.name}}</button>
+            <button ng-if="method!=vm.method.name" type="button" class="btn-small btn-default disabled" ng-click="vm.setMethod(method)">{{method.name}}</button>
         </span>
 
-        <div ng-show="vm.method.selectedMethod">
+        <div ng-show="vm.selectedMethod">
             <div>
-                <button type="button" class="btn-small btn-primary" ng-click="vm.execute(vm.method)">Send</button>
+                <button type="button" class="btn-small btn-primary" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
             </div>
-            <textarea placeholder="argument (JSON)" ng-model="vm.method.argStr">
+            <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
 
             </textarea>
 

@@ -15,12 +15,8 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     methods:["her"]
   };
 
-  vm.method = {
-    selectedMethod: false,
-    argStr: "{}"
-  };
-
   vm.result = {};
+  vm.argStr = "{}";
 
   vm.connectClient = function(addr) {
     vm.client = GrpcSvc.createClient($stateParams.serviceID, addr);
@@ -30,12 +26,11 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.setMethod = function(method) {
-    vm.method.name = method;
-    vm.method.selectedMethod = true;
+    vm.selectedMethod = method.name;
   };
 
-  vm.execute = function(method) {
-    vm.client[method.name](JSON.parse(method.argStr), function(err, reply) {
+  vm.execute = function(methodName, argStr) {
+    vm.client[methodName](JSON.parse(argStr), function(err, reply) {
       if (err) {
         vm.result.err = {
           code: err.code,
