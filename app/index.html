@@ -21,9 +21,14 @@
         <!--<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon"/><link rel="icon" href="images/favicon.ico" type="image/x-icon"/>-->
     </head>
     <body>
-        <div class="nav">
+        <div class="nav" ng-controller="NavController as vm">
             <div class="btn-group-vertical" role="group">
-                <button type="button" class="btn btn-default" ui-sref="new">New Client</button>
+                <button type="button" class="btn btn-primary" ui-sref="new">New Client</button>
+            </div>
+            <div ng-repeat="proto in vm.protos">
+                <div ng-repeat="svc in proto.services">
+                    <button type="button" class="btn-small btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
+                </div>
             </div>
         </div>
         <div class="container">
@@ -54,7 +59,9 @@
     <script src="scripts/app.controller.js"></script>
     <script src="scripts/about.controller.js"></script>
     <script src="scripts/new.controller.js"></script>
+    <script src="scripts/client.controller.js"></script>
     <script src="scripts/grpc.service.js"></script>
+    <script src="scripts/nav.controller.js"></script>
     <!--<script src="scripts/grpcdefiniton.service.js"></script>-->
     <!-- endinject -->
     <!-- endbuild -->

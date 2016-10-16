@@ -8,6 +8,12 @@ service ExampleService {
 
 message SayRequest {
   string sayWhat = 1;
+  Recipient recipient = 2;
+}
+
+message Recipient {
+  string name = 1;
+  int32 numberOfTimes = 2;
 }
 
 message SayReply {

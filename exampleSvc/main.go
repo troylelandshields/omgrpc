@@ -39,9 +39,19 @@ func (svc *Svc) SayHello(ctx context.Context, req *SayRequest) (*SayReply, error
 		return nil, errors.New("Must request server to say something!")
 	}
 
-	fmt.Println("Say Request:", req.SayWhat)
+	if req.Recipient != nil {
+		for i := 0; i < int(req.Recipient.NumberOfTimes); i++ {
+			fmt.Printf("%s to %s - %d\n", req.SayWhat, req.Recipient.Name, i)
+		}
+
+		return &SayReply{
+			SaidWhat: fmt.Sprintf("Server says, \"%s\" to %s, %d times", req.SayWhat, req.Recipient.Name, req.Recipient.NumberOfTimes),
+		}, nil
+	}
+
+	fmt.Printf("%s to World\n", req.SayWhat)
 
 	return &SayReply{
-		SaidWhat: fmt.Sprintf("Server says, \"%s\"", req.SayWhat),
+		SaidWhat: fmt.Sprintf("Server says, \"%s\" to World", req.SayWhat),
 	}, nil
 }
