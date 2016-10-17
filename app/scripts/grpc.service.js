@@ -73,10 +73,12 @@ function GrpcSvc() {
             } else {
                 t = f.type.name;
             }
-
             return {
                 name: f.name,
-                type: t
+                type: t,
+                defaultValue: f.defaultValue,
+                repeated: f.repeated,
+                required: f.required
             }
         });
 
@@ -84,10 +86,6 @@ function GrpcSvc() {
             fields: fields,
             typeName: grpcType.name
         }
-    }
-
-    function parseArgument(grpcMethod) {
-        
     }
 
     function createClient(serviceID, addr) {
@@ -122,9 +120,10 @@ function GrpcSvc() {
                 }
 
                 m.requestType = {};
+                m.responseType = {};
 
-                m.requestType = parseResolvedType(child.resolvedRequestType);
-                m.responseType = parseResolvedType(child.resolvedResponseType);
+                m.requestType.type = parseResolvedType(child.resolvedRequestType);
+                m.responseType.type = parseResolvedType(child.resolvedResponseType);
 
                 client.methods.push(m);
             }

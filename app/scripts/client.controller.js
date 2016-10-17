@@ -12,11 +12,27 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   vm.connection = {
     addr:"127.0.0.1:6565",
     hasConnection: false,
-    methods:["her"]
   };
 
   vm.result = {};
   vm.argStr = "{}";
+
+  function convertToExampleJSON(field) {
+    debugger;
+    var json = {};
+
+    if (field.type && typeof field.type != "object") { 
+      return field.defaultValue;
+    }
+    
+    field.type.fields.forEach(function(childField){
+      json[childField.name] = convertToExampleJSON(childField);
+    });
+
+    debugger;
+
+    return json;
+  }
 
   vm.connectClient = function(addr) {
     vm.client = GrpcSvc.createClient($stateParams.serviceID, addr);
@@ -26,7 +42,10 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.setMethod = function(method) {
+    debugger;
     vm.selectedMethod = method.name;
+
+    vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType));
   };
 
   vm.execute = function(methodName, argStr) {
