@@ -1,28 +1,31 @@
 <div ng-controller="ClientController as vm">
     <div>
-        <input type="text" ng-model="vm.connection.addr" ng-disabled="vm.client"></input>
-        <button type="button" class="btn-small btn-default disabled" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
+        <input type="text" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client"></input>
+        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
     </div>
 
     <div>
         <span ng-repeat="method in vm.client.methods">
-            <button ng-if="method==vm.method.name" disabled type="button" class="btn-small btn-primary" ng-click="vm.setMethod(method)">{{method.name}}</button>
-            <button ng-if="method!=vm.method.name" type="button" class="btn-small btn-default disabled" ng-click="vm.setMethod(method)">{{method.name}}</button>
+            <button type="button" class="btn btn-warning" ng-click="vm.setMethod(method)">{{method.name}}</button>
         </span>
 
-        <div ng-show="vm.selectedMethod">
-            <div>
-                <button type="button" class="btn-small btn-primary" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
+        <div ng-show="vm.selectedMethod" class="well">
+            <div class="row">
+                <div>
+                    <button type="button" class="btn btn-info" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
+                </div>
             </div>
-            <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
-            </textarea>
+            <div class="row">
+                <div class="col-md-4">
+                <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
+                </textarea>
+                </div>
 
-            <div ng-if="vm.result.err">
-                <p>Error: {{vm.result.err.code}}</p>
-                <p>Message: {{vm.result.err.message}}</p>
-            </div>
-            <div ng-if="!vm.result.err">
-                {{vm.result.response | json}}
+                <div>
+                    <div ng-if="vm.result != null">
+                        <pre ng-bind-html="vm.result | prettify"></pre>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

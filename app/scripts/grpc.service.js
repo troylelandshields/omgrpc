@@ -57,7 +57,6 @@ function GrpcSvc() {
 
         state.protos.push(parsed)
 
-        debugger;
         return parsed
     }
 

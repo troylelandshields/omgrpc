@@ -10,11 +10,10 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   var vm = this;
 
   vm.connection = {
-    addr:"127.0.0.1:6565",
     hasConnection: false,
   };
 
-  vm.result = {};
+  vm.result = null;
   vm.argStr = "{}";
 
   function convertToExampleJSON(field) {
@@ -45,20 +44,17 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.execute = function(methodName, argStr) {
+    vm.result = null;
     vm.client[methodName](JSON.parse(argStr), function(err, reply) {
       if (err) {
-        vm.result.err = {
-          code: err.code,
+        vm.result = {
+          error_code: err.code,
           message: err.message
         }
-        vm.result.response = null;
       } else {
-        vm.result.response = reply;
-        vm.result.err = null;
+        vm.result = reply;
       }
       $scope.$apply();
     });
   };
-
-  
 }

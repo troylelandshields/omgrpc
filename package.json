@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "angular": "^1.4.4",
+    "angular-sanitize": "^1.5.8",
     "angular-ui-router": "^0.2.15",
     "aws-sdk": "^2.6.9",
     "bootstrap": "^3.3.5",
