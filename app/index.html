@@ -13,6 +13,9 @@
         <!-- build:css styles/vendor.css -->
         <!-- inject:css -->
         <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css"/><!-- endinject -->
+        <link rel="stylesheet" href="../node_modules/dropzone/dist/dropzone.css"/>
+        <link rel="stylesheet" href="../node_modules/ngdropzone/dist/ng-dropzone.css"/>
+        
         <!-- endbuild -->
         <!-- build:css(.tmp) styles/app.css -->
         <!-- inject:css -->
@@ -21,31 +24,31 @@
         <!--<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon"/><link rel="icon" href="images/favicon.ico" type="image/x-icon"/>-->
     </head>
     <body>
-        <div class="nav" ng-controller="NavController as vm">
-            <div class="btn-group-vertical" role="group">
-                <button type="button" class="btn btn-primary" ui-sref="new">New Client</button>
-            </div>
-            <div ng-repeat="proto in vm.protos">
-                <div ng-repeat="svc in proto.services">
-                    <button type="button" class="btn-small btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="nav well" ng-controller="NavController as vm">
+                    <div class="btn-group-vertical" role="group">
+                        <button type="button" class="btn btn-primary" ui-sref="new">New Client</button>
+                        <div ng-repeat="proto in vm.protos">
+                            <div ng-repeat="svc in proto.services">
+                                <button type="button" class="btn btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="container">
-            <div class="page-header">
-                <h1>Frontend Boilerplate</h1>
-                <div class="menu">
-                    <a ui-sref="main">Home</a>
-                    <a ui-sref="about">About</a>
+            <div class="container">
+                <div class="page-header">
+                    <h1>omgrpc</h1>
                 </div>
-            </div>
 
-            <div ui-view="guest">
+                <div ui-view="guest">
+                </div>
             </div>
         </div>
     <footer>
         <div class="container">
-            <p class="text-muted">Made with love.</p>
+            <p class="text-muted">Made with extreme carelessness.</p>
         </div>
     </footer><!-- build:js(.tmp) scripts/vendor.js -->
 
@@ -55,6 +58,8 @@
     <script src="../node_modules/angular/angular.js"></script>
     <script src="../node_modules/angular-ui-router/release/angular-ui-router.min.js"></script>
     <script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../node_modules/dropzone/dist/dropzone.js"></script>
+    <script src="../node_modules/ngdropzone/dist/ng-dropzone.js"></script>
     <script src="scripts/entry.js"></script>
     <script src="scripts/app.controller.js"></script>
     <script src="scripts/about.controller.js"></script>

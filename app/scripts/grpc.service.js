@@ -45,10 +45,10 @@ function GrpcSvc() {
         return services;
     }
 
-    function parseProtofile(proto) {
+    function parseProtofile(protoFile) {
         var file = {
-            root: path.dirname(proto.file.path),
-            file: proto.file.name
+            root: path.dirname(protoFile.path),
+            file: protoFile.name
         }
         let parsed = grpc.load(file)
 
@@ -105,8 +105,6 @@ function GrpcSvc() {
                 methodCache[p.toLowerCase()] = {
                     name: p
                 };
-                // client.methods.push();
-                // debugger;
             }
         }
 
@@ -133,7 +131,7 @@ function GrpcSvc() {
         return client;
     }
 
-    parseProtofile({file:{path:"/Users/troyshields/projects/omgrpc/exampleSvc/example.proto", name:"example.proto"}})
+    // parseProtofile({path:"/Users/troyshields/projects/omgrpc/exampleSvc/example.proto", name:"example.proto"})
 
     return {
         parseProtofile: parseProtofile,

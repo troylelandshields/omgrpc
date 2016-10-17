@@ -1,10 +1,12 @@
 'use strict';
 
-require('nw.gui').Window.get().showDevTools()
+// require('nw.gui').Window.get().showDevTools()
+Dropzone.autoDiscover = false;
 
 var appDependencies = [
   'ng',
-  'ui.router'
+  'ui.router',
+  'thatisuday.dropzone'
 ];
 
 angular

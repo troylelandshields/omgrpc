@@ -4,21 +4,35 @@ angular
   .module('app')
   .controller('NewController', NewController);
 
-NewController.$inject = ['GrpcSvc'];
+NewController.$inject = ['GrpcSvc', '$state'];
 
-function NewController (GrpcSvc)
+function NewController (GrpcSvc, $state)
 {
     var vm = this;
     vm.newConnection = {
     }
 
-    vm.connect = function(connectionParams) {
-        //TODO don't access the element directly here'
-        connectionParams.file = $('#proto-file')[0].files[0]
+    vm.dzOptions = {
+        acceptedFiles : '.proto',
+        autoProcessQueue:false,
+        url:"someurl"
+    };
+    
+    vm.dzCallbacks = {
+        'addedfile' : function(file){
+            console.log(file);
+            vm.add(file)
 
-        var services = GrpcSvc.parseProtofile(connectionParams);
-        console.log(services)
+            vm.removeNewFile(file);
+        }
+    };
 
-        //Add the services to the side menu I guess and go to a different menu so the user can send requests?
+    vm.dzMethods = {};
+    vm.removeNewFile = function(file){
+        vm.dzMethods.removeFile(file);
+    }
+
+    vm.add = function(file) {
+        var services = GrpcSvc.parseProtofile(file);
     }
 }

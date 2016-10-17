@@ -18,7 +18,6 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   vm.argStr = "{}";
 
   function convertToExampleJSON(field) {
-    debugger;
     var json = {};
 
     if (field.type && typeof field.type != "object") { 
@@ -28,8 +27,6 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     field.type.fields.forEach(function(childField){
       json[childField.name] = convertToExampleJSON(childField);
     });
-
-    debugger;
 
     return json;
   }
@@ -42,10 +39,9 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.setMethod = function(method) {
-    debugger;
     vm.selectedMethod = method.name;
 
-    vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType));
+    vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType), undefined, 2);
   };
 
   vm.execute = function(methodName, argStr) {

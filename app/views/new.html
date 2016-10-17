@@ -1,4 +1,3 @@
 <div ng-controller="NewController as vm">
-    <input id="proto-file" type="file"/>
-    <input type="submit" ng-click="vm.connect(vm.newConnection)" value="Add Proto"></input>
+    <div class="dropzone" options="vm.dzOptions" callbacks="vm.dzCallbacks" methods="vm.dzMethods" ng-dropzone></div>
 </div>
