@@ -45,12 +45,38 @@ function GrpcSvc() {
         return services;
     }
 
-    function parseProtofile(protoFile) {
-        var file = {
-            root: path.dirname(protoFile.path),
-            file: protoFile.name
+    function findRoot(root, relPath, attempts) {
+        var parsed
+        try {
+            var file = {
+                root: root,
+                file: relPath
+            };
+
+            ///Users/troyshields/go/src/github.com/weave-lab/data-service/vendor/github.com/golang/protobuf/ptypes/empty
+            debugger;
+            parsed = grpc.load(file);
+        } catch (e) {
+            if (attempts > 0) {
+                let newRoot = path.dirname(root);
+                let newRelPath = path.join(root, relPath).replace(newRoot, "");
+
+                if (newRelPath[0] == path.sep) {
+                    newRelPath = newRelPath.substring(1);
+                }
+
+                return findRoot(newRoot, newRelPath, attempts-1);
+            }
+
+            debugger;
+            throw (e);
         }
-        let parsed = grpc.load(file)
+
+        return parsed
+    }
+
+    function parseProtofile(protoFile) {
+        let parsed = findRoot(path.dirname(protoFile.path), protoFile.name, protoFile.path.split(path.sep).length);
 
         parsed.services = parseServices(parsed)
         parsed.id = parsed.$$hashKey;

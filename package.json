@@ -20,7 +20,7 @@
   },
   "readmeFilename": "README",
   "devDependencies": {
-    "nw-builder": "^2.0.2"
+    "nw-builder": "^2.2.7"
   },
   "dependencies": {
     "angular": "^1.4.4",
