@@ -33,6 +33,11 @@ function NewController (GrpcSvc, $state)
     }
 
     vm.add = function(file) {
-        var services = GrpcSvc.parseProtofile(file);
+        vm.error = "";
+        try {
+            var services = GrpcSvc.parseProtofile(file);
+        } catch (err) {
+            vm.error = "Uh oh, something went wrong when importing that proto file... check the console and email me about it: " + err;
+        }
     }
 }

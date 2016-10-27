@@ -52,9 +52,7 @@ function GrpcSvc() {
                 root: root,
                 file: relPath
             };
-
-            ///Users/troyshields/go/src/github.com/weave-lab/data-service/vendor/github.com/golang/protobuf/ptypes/empty
-            debugger;
+            
             parsed = grpc.load(file);
         } catch (e) {
             if (attempts > 0) {
@@ -68,7 +66,6 @@ function GrpcSvc() {
                 return findRoot(newRoot, newRelPath, attempts-1);
             }
 
-            debugger;
             throw (e);
         }
 

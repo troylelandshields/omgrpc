@@ -1,3 +1,6 @@
 <div ng-controller="NewController as vm">
+    <div ng-show="vm.error" class="alert alert-danger">
+        {{vm.error}}
+    </div>
     <div class="dropzone" options="vm.dzOptions" callbacks="vm.dzCallbacks" methods="vm.dzMethods" ng-dropzone></div>
 </div>
