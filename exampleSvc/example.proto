@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package exampleSvc;
+package main;
 
 service ExampleService {
   rpc SayHello(SayRequest) returns (SayReply) {}

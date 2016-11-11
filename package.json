@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/vhpoet/frontend-boilerplate.git"
+    "url": "git://github.com/troylelandshields/omgrpc"
   },
   "main": "app/index.html",
   "window": {
@@ -19,19 +19,14 @@
     "width": 1200
   },
   "readmeFilename": "README",
-  "devDependencies": {
-    "nw-builder": "^2.2.7"
-  },
   "dependencies": {
     "angular": "^1.4.4",
     "angular-sanitize": "^1.5.8",
     "angular-ui-router": "^0.2.15",
-    "aws-sdk": "^2.6.9",
     "bootstrap": "^3.3.5",
     "dropzone": "^4.3.0",
     "jquery": "^2.1.4",
     "ngdropzone": "^2.0.1",
-    "nw-builder": "^2.2.7",
     "path": "^0.12.7"
   }
 }

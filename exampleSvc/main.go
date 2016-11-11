@@ -55,3 +55,5 @@ func (svc *Svc) SayHello(ctx context.Context, req *SayRequest) (*SayReply, error
 		SaidWhat: fmt.Sprintf("Server says, \"%s\" to World", req.SayWhat),
 	}, nil
 }
+
+//go:generate protoc -I=./ -I=$GOPATH/src --go_out=plugins=grpc:. example.proto
