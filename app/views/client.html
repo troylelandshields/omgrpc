@@ -10,6 +10,30 @@
         </span>
 
         <div ng-show="vm.selectedMethod" class="well">
+            <div>
+                <div class="col-md-12">
+                    <!--key, value, minus button-->
+                    <div class="row" ng-repeat="metadata in vm.metadataArgs">
+                        <div class="col-md-4">
+                            <input type="text" ng-model="metadata.key">
+                            </input>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="text" ng-model="metadata.value">
+                            </input>
+                        </div>
+
+                        <div class="col-md-1">
+                            <button ng-click="vm.removeMetadata(metadata)">rm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <button ng-click="vm.addMetadata()">mk</button>
+                </div>
+            </div>
             <div class="row">
                 <div>
                     <button type="button" class="btn btn-info" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
@@ -17,8 +41,8 @@
             </div>
             <div class="row">
                 <div class="col-md-4">
-                <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
-                </textarea>
+                    <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
+                    </textarea>
                 </div>
 
                 <div>

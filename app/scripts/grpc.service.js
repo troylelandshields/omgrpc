@@ -88,6 +88,10 @@ function GrpcSvc() {
     }
 
     function parseResolvedType(grpcType) {
+        if (!grpcType._fields) {
+            return grpcType.name
+        }
+
         var fields = grpcType._fields.map(function(f){
             var t
             if (f.resolvedType) {

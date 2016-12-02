@@ -15,6 +15,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
 
   vm.result = null;
   vm.argStr = "{}";
+  vm.metadataArgs = [];
 
   function convertToExampleJSON(field) {
     var json = {};
@@ -43,9 +44,26 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType), undefined, 2);
   };
 
+  vm.addMetadata = function() {
+    vm.metadataArgs.push({})
+  }
+
+  vm.removeMetadata = function(md) {
+    var index = vm.metadataArgs.indexOf(md)
+    if (index > -1) {
+      vm.metadataArgs.splice(index, 1);
+    }
+  }
+
   vm.execute = function(methodName, argStr) {
     vm.result = null;
-    vm.client[methodName](JSON.parse(argStr), function(err, reply) {
+    var meta = new grpc.Metadata();
+
+    vm.metadataArgs.forEach(function(ma) {
+      meta.add(ma.key, ma.value)
+    });
+
+    vm.client[methodName](JSON.parse(argStr), meta, function(err, reply) {
       if (err) {
         vm.result = {
           error_code: err.code,
