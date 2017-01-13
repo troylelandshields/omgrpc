@@ -4,6 +4,8 @@ package main;
 
 service ExampleService {
   rpc SayHello(SayRequest) returns (SayReply) {}
+
+  rpc SayHelloStream(stream SayRequest) returns (stream SayReply) {}
 }
 
 message SayRequest {

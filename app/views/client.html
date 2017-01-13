@@ -11,6 +11,7 @@
 
         <div ng-show="vm.selectedMethod" class="well">
             <div>
+                <h4>Metadata</h4>
                 <div class="col-md-12">
                     <!--key, value, minus button-->
                     <div class="row" ng-repeat="metadata in vm.metadataArgs">
@@ -25,21 +26,35 @@
                         </div>
 
                         <div class="col-md-1">
-                            <button ng-click="vm.removeMetadata(metadata)">rm</button>
+                            <button ng-click="vm.removeMetadata(metadata)">Remove</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="row">
-                    <button ng-click="vm.addMetadata()">mk</button>
+                    <button ng-click="vm.addMetadata()">Add</button>
                 </div>
             </div>
-            <div class="row">
+
+            <div class="row" ng-if="!vm.selectedMethod.isStream">
                 <div>
                     <button type="button" class="btn btn-info" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
                 </div>
             </div>
-            <div class="row">
+
+            <div class="row" ng-if="vm.selectedMethod.isStream">
+                <div ng-if="!vm.stream.isConnected">
+                    <button type="button" class="btn btn-info" ng-click="vm.connectStream(vm.selectedMethod)">Connect</button>
+                </div>
+                <div ng-if="vm.stream.isConnected">
+                    <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream, vm.argStr)">Send Message</button>
+                </div>
+                <div ng-if="vm.stream.isConnected">
+                    <button type="button" class="btn btn-info" ng-click="vm.closeStream(vm.stream)">Close</button>
+                </div>
+            </div>
+
+            <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
                 <div class="col-md-4">
                     <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
                     </textarea>

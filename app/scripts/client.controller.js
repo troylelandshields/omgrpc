@@ -39,7 +39,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.setMethod = function(method) {
-    vm.selectedMethod = method.name;
+    vm.selectedMethod = method;
 
     vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType), undefined, 2);
   };
@@ -49,21 +49,13 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   }
 
   vm.removeMetadata = function(md) {
-    var index = vm.metadataArgs.indexOf(md)
+    var index = vm.metadataArgs.indexOf(md);
     if (index > -1) {
       vm.metadataArgs.splice(index, 1);
     }
   }
 
-  vm.execute = function(methodName, argStr) {
-    vm.result = null;
-    var meta = new grpc.Metadata();
-
-    vm.metadataArgs.forEach(function(ma) {
-      meta.add(ma.key, ma.value)
-    });
-
-    vm.client[methodName](JSON.parse(argStr), meta, function(err, reply) {
+  function displayResult(err, reply) {
       if (err) {
         vm.result = {
           error_code: err.code,
@@ -73,6 +65,46 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
         vm.result = reply;
       }
       $scope.$apply();
+  }
+
+  vm.execute = function(method, argStr) {
+    vm.result = null;
+    var meta = new grpc.Metadata();
+
+    vm.metadataArgs.forEach(function(ma) {
+      meta.add(ma.key, ma.value)
+    });
+
+    vm.client[method.name](JSON.parse(argStr), meta, displayResult);
+  };
+
+  vm.connectStream = function(method) {
+    vm.result = null;
+    var meta = new grpc.Metadata();
+
+    vm.metadataArgs.forEach(function(ma) {
+      meta.add(ma.key, ma.value)
+    });
+
+    vm.stream = vm.client[method.name](meta);
+    vm.stream.isConnected = true;
+    vm.stream.setMaxListeners(1);
+
+    vm.stream.on("data", function(data) {
+      displayResult(null, data);
     });
   };
+
+  vm.sendStream = function(stream, argStr) {
+    vm.result = null;
+    stream.write(JSON.parse(argStr));
+  };
+
+  vm.closeStream = function(stream) {
+    debugger;
+    stream.end();
+    vm.stream.isConnected = false;
+  }
+
+
 }

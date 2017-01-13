@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -45,15 +46,37 @@ func (svc *Svc) SayHello(ctx context.Context, req *SayRequest) (*SayReply, error
 		}
 
 		return &SayReply{
-			SaidWhat: fmt.Sprintf("Server says, \"%s\" to %s, %d times", req.SayWhat, req.Recipient.Name, req.Recipient.NumberOfTimes),
+			SaidWhat: fmt.Sprintf("Server says, \"%s\" to %s, %d times at %s", req.SayWhat, req.Recipient.Name, req.Recipient.NumberOfTimes, time.Now().Format("3:04:05PM")),
 		}, nil
 	}
 
 	fmt.Printf("%s to World\n", req.SayWhat)
 
 	return &SayReply{
-		SaidWhat: fmt.Sprintf("Server says, \"%s\" to World", req.SayWhat),
+		SaidWhat: fmt.Sprintf("Server says, \"%s\" to World at %s", req.SayWhat, time.Now().Format("3:04:05PM")),
 	}, nil
+}
+
+func (svc *Svc) SayHelloStream(srv ExampleService_SayHelloStreamServer) error {
+	ctx := srv.Context()
+
+	for {
+		req, err := srv.Recv()
+		if err != nil {
+			return err
+		}
+
+		resp, err := svc.SayHello(ctx, req)
+		if err != nil {
+			return err
+		}
+
+		err = srv.Send(resp)
+		if err != nil {
+			return err
+		}
+	}
+
 }
 
 //go:generate protoc -I=./ -I=$GOPATH/src --go_out=plugins=grpc:. example.proto

@@ -136,6 +136,8 @@ function GrpcSvc() {
 
         svc.client.service.children.forEach(function(child){
             if (child.className==="Service.RPCMethod") {
+                // check if it's a streaming endpoint and do something different if it is? this whole mess needs to be cleaned up
+
                 var m = methodCache[child.name.toLowerCase()]
 
                 if (!m) {
@@ -148,6 +150,10 @@ function GrpcSvc() {
 
                 m.requestType.type = parseResolvedType(child.resolvedRequestType);
                 m.responseType.type = parseResolvedType(child.resolvedResponseType);
+
+                m.requestStream = child.requestStream;
+                m.responseStream = child.responseStream;
+                m.isStream = m.requestStream || m.responseStream;
 
                 client.methods.push(m);
             }
