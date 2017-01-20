@@ -101,7 +101,6 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   };
 
   vm.closeStream = function(stream) {
-    debugger;
     stream.end();
     vm.stream.isConnected = false;
   }

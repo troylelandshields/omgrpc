@@ -1,7 +1,7 @@
 <html ng-app="app" ng-controller="AppController">
     <head>
         <meta charset="utf-8"/>
-        <title>omgrpc</title>
+        <title>omgRPC</title>
         <meta name="description" content=""/>
         <meta property="og:description" content=""/>
         <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -28,9 +28,9 @@
             <div class="col-md-3">
                 <div class="nav well" ng-controller="NavController as vm">
                     <div class="btn-group-vertical" role="group">
-                        <button type="button" class="btn btn-primary" ui-sref="new">New Client</button>
+                        <button type="button" class="btn btn-primary" ui-sref="new">New Protofile</button>
                         <div ng-repeat="proto in vm.protos">
-                            <div ng-repeat="svc in proto.services">
+                            <div class="padding-top-sm" ng-repeat="svc in proto.services">
                                 <button type="button" class="btn btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
                             </div>
                         </div>
@@ -39,7 +39,7 @@
             </div>
             <div class="container">
                 <div class="page-header">
-                    <h1>omgrpc</h1>
+                    <h1>omgRPC</h1>
                 </div>
 
                 <div ui-view="guest">

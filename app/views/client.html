@@ -5,64 +5,79 @@
     </div>
 
     <div>
-        <span ng-repeat="method in vm.client.methods">
-            <button type="button" class="btn btn-warning" ng-click="vm.setMethod(method)">{{method.name}}</button>
-        </span>
+        <ul class="nav nav-tabs">
+            <li ng-repeat="method in vm.client.methods" role="presentation" ng-class="vm.selectedMethod.name === method.name ? 'active' : vm.selectedMethod" ng-click="vm.setMethod(method)"><a>{{method.name}}</a></li>
+        </ul>
 
-        <div ng-show="vm.selectedMethod" class="well">
-            <div>
-                <h4>Metadata</h4>
-                <div class="col-md-12">
-                    <!--key, value, minus button-->
-                    <div class="row" ng-repeat="metadata in vm.metadataArgs">
-                        <div class="col-md-4">
-                            <input type="text" ng-model="metadata.key">
-                            </input>
+        <div ng-show="vm.selectedMethod" class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div>
+                        <h5>Metadata</h5>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <!--key, value, minus button-->
+                                <div class="row padding-top" ng-repeat="metadata in vm.metadataArgs">
+                                    <input type="text" ng-model="metadata.key" placeholder="key">
+                                    </input>
+
+                                    <input type="text" ng-model="metadata.value" placeholder="value">
+                                    </input>
+
+                                    <button type="button" class="btn btn-danger btn-xs" ng-click="vm.removeMetadata(metadata)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <input type="text" ng-model="metadata.value">
-                            </input>
+                        <div class="row padding-top-sm">
+                            <div class="col-md-1">
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-success btn-xs" ng-click="vm.addMetadata()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>  Add Metadata</button>
+                            </div>
                         </div>
+                    <div>
+                </div>
 
-                        <div class="col-md-1">
-                            <button ng-click="vm.removeMetadata(metadata)">Remove</button>
+                <div class="row padding-top-sm" ng-if="vm.selectedMethod.isStream">
+                    <div ng-if="!vm.stream.isConnected">
+                        <button type="button" class="btn btn-info" ng-click="vm.connectStream(vm.selectedMethod)">Connect</button>
+                    </div>
+                </div>
+
+                <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
+                    <h4>Input</h4>
+                    <div class="col-md-12">
+                        <textarea class="grpc-input" placeholder="argument (JSON)" ng-model="vm.argStr">
+                        </textarea>
+                    </div>
+                </div>
+
+                <div class="row padding-top pull-right" ng-if="!vm.selectedMethod.isStream">
+                    <div>
+                        <button type="button" class="btn btn-primary" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
+                    </div>
+                </div>
+
+                <div class="row padding-top pull-right" ng-if="vm.selectedMethod.isStream">
+                    <div>
+                        <div ng-if="vm.stream.isConnected">
+                            <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream, vm.argStr)">Send Message</button>
+                        </div>
+                        <div ng-if="vm.stream.isConnected" class="padding-top-sm">
+                            <button type="button" class="btn btn-warning" ng-click="vm.closeStream(vm.stream)">Close</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <button ng-click="vm.addMetadata()">Add</button>
-                </div>
-            </div>
-
-            <div class="row" ng-if="!vm.selectedMethod.isStream">
-                <div>
-                    <button type="button" class="btn btn-info" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
-                </div>
-            </div>
-
-            <div class="row" ng-if="vm.selectedMethod.isStream">
-                <div ng-if="!vm.stream.isConnected">
-                    <button type="button" class="btn btn-info" ng-click="vm.connectStream(vm.selectedMethod)">Connect</button>
-                </div>
-                <div ng-if="vm.stream.isConnected">
-                    <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream, vm.argStr)">Send Message</button>
-                </div>
-                <div ng-if="vm.stream.isConnected">
-                    <button type="button" class="btn btn-info" ng-click="vm.closeStream(vm.stream)">Close</button>
-                </div>
-            </div>
-
-            <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
-                <div class="col-md-4">
-                    <textarea placeholder="argument (JSON)" ng-model="vm.argStr">
-                    </textarea>
-                </div>
-
-                <div>
-                    <div ng-if="vm.result != null">
-                        <pre ng-bind-html="vm.result | prettify"></pre>
+                <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
+                    <div class="col-md-10">
+                        <h4 ng-if="vm.result != null">Response</h4>
+                        <div>
+                            <div ng-if="vm.result != null">
+                                <pre ng-bind-html="vm.result | prettify"></pre>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

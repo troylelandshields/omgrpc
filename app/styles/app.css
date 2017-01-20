@@ -39,6 +39,24 @@ footer {
   .menu a {
     margin: 0 10px 0 0; }
 
+.padding-top {
+  margin-top: 10px; 
+}
+
+.padding-top-sm {
+  margin-top: 3px;
+}
+
+.panel-body {
+  padding: 35px;
+}
+
+.grpc-input {
+  height: 175px;
+  width: 100%;
+  resize: vertical;
+}
+
 
 pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
 .string { color: green; }
