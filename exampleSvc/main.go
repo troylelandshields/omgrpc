@@ -11,6 +11,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"encoding/json"
+
 	"google.golang.org/grpc"
 )
 
@@ -84,14 +86,29 @@ func (svc *Svc) SayHelloStream(srv ExampleService_SayHelloStreamServer) error {
 
 // Bytes takes bytes and returns bytes
 func (svc *Svc) Bytes(ctx context.Context, req *MessageWithBytes) (*MessageWithBytes, error) {
+	fmt.Printf("bytes came in %s\n", string(req.Bytes))
+
 	id, err := uuid.New(req.Bytes)
-	if err != nil {
-		fmt.Printf("bytes are not a UUID: %s\n", string(req.Bytes))
-	} else {
+	if err == nil {
 		fmt.Printf("it is a UUID: %s\n", id.String())
+		return &MessageWithBytes{
+			Bytes: id.Bytes(),
+		}, nil
 	}
 
-	return req, nil
+	var x interface{}
+	err = json.Unmarshal(req.Bytes, &x)
+	if err == nil {
+		fmt.Printf("it is JSON: %+v\n", x)
+		return &MessageWithBytes{
+			Bytes: req.Bytes,
+		}, nil
+	}
+
+	fmt.Printf("bytes are not a UUID, not JSON: %s\n", string(req.Bytes))
+	return &MessageWithBytes{
+		Bytes: req.Bytes,
+	}, nil
 }
 
 //go:generate protoc -I=./ -I=$GOPATH/src --go_out=plugins=grpc:. example.proto

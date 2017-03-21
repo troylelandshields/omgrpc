@@ -25,7 +25,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
 
     if (field.type && field.type == "bytes") {
       transformers[field.name] = function(str){
-        var buffer = new Buffer(str, 'utf8');
+        var buffer = new Buffer(str, "utf-8");
         return buffer;
       }
       return "";
@@ -77,7 +77,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
         var transform = function(obj) {
           Object.keys(obj).forEach(function(key) {
             if (obj[key] instanceof Buffer) {
-              obj[key] = obj[key].toString();
+              obj[key] = obj[key].toString("utf-8");
             }
             if (typeof obj[key] == "object") {
               transform(obj[key]);
