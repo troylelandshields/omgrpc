@@ -30,6 +30,8 @@ func main() {
 
 }
 
+var _ ExampleServiceServer = &Svc{}
+
 type Svc struct {
 }
 
@@ -76,7 +78,13 @@ func (svc *Svc) SayHelloStream(srv ExampleService_SayHelloStreamServer) error {
 			return err
 		}
 	}
+}
 
+// Bytes takes bytes and returns bytes
+func (svc *Svc) Bytes(ctx context.Context, req *MessageWithBytes) (*MessageWithBytes, error) {
+	fmt.Printf("got some bytes: %s\n", string(req.Bytes))
+
+	return req, nil
 }
 
 //go:generate protoc -I=./ -I=$GOPATH/src --go_out=plugins=grpc:. example.proto

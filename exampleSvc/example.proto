@@ -6,6 +6,8 @@ service ExampleService {
   rpc SayHello(SayRequest) returns (SayReply) {}
 
   rpc SayHelloStream(stream SayRequest) returns (stream SayReply) {}
+
+  rpc Bytes(MessageWithBytes) returns (MessageWithBytes) {}
 }
 
 message SayRequest {
@@ -20,4 +22,9 @@ message Recipient {
 
 message SayReply {
   string saidWhat = 1;
+}
+
+message MessageWithBytes {
+  reserved 2;
+  bytes Bytes = 1;
 }
