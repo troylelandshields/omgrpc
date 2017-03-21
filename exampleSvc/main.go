@@ -15,7 +15,7 @@ import (
 func main() {
 	svc := &Svc{}
 
-	lis, err := net.Listen("tcp", "localhost:6565")
+	lis, err := net.Listen("tcp", "localhost:9000")
 	if err != nil {
 		fmt.Println("Unexpected err:", err)
 		os.Exit(1)

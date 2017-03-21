@@ -28,7 +28,7 @@
             <div class="col-md-3">
                 <div class="nav well" ng-controller="NavController as vm">
                     <div class="btn-group-vertical" role="group">
-                        <button type="button" class="btn btn-primary" ui-sref="new">New Protofile</button>
+                        <button type="button" class="btn btn-primary" ui-sref="new">Open Protofile</button>
                         <div ng-repeat="proto in vm.protos">
                             <div class="padding-top-sm" ng-repeat="svc in proto.services">
                                 <button type="button" class="btn btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
