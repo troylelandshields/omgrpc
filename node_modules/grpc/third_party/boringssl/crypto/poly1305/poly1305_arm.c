@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "../internal.h"
+#include "internal.h"
 
 
 typedef struct {

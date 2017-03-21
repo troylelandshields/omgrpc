@@ -136,7 +136,6 @@
 #include <openssl/ssl.h>
 
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <openssl/err.h>
@@ -144,7 +143,7 @@
 #include <openssl/hmac.h>
 #include <openssl/md5.h>
 #include <openssl/mem.h>
-#include <openssl/obj.h>
+#include <openssl/nid.h>
 #include <openssl/rand.h>
 
 #include "internal.h"
@@ -314,11 +313,10 @@ int tls1_change_cipher_state(SSL *ssl, int which) {
   }
 
   if (is_read) {
-    ssl_set_read_state(ssl, aead_ctx);
-  } else {
-    ssl_set_write_state(ssl, aead_ctx);
+    return ssl->method->set_read_state(ssl, aead_ctx);
   }
-  return 1;
+
+  return ssl->method->set_write_state(ssl, aead_ctx);
 }
 
 size_t SSL_get_key_block_len(const SSL *ssl) {
@@ -329,8 +327,8 @@ size_t SSL_get_key_block_len(const SSL *ssl) {
 
 int SSL_generate_key_block(const SSL *ssl, uint8_t *out, size_t out_len) {
   return ssl->s3->enc_method->prf(
-      ssl, out, out_len, ssl->session->master_key,
-      ssl->session->master_key_length, TLS_MD_KEY_EXPANSION_CONST,
+      ssl, out, out_len, SSL_get_session(ssl)->master_key,
+      SSL_get_session(ssl)->master_key_length, TLS_MD_KEY_EXPANSION_CONST,
       TLS_MD_KEY_EXPANSION_CONST_SIZE, ssl->s3->server_random, SSL3_RANDOM_SIZE,
       ssl->s3->client_random, SSL3_RANDOM_SIZE);
 }
@@ -340,12 +338,16 @@ int tls1_setup_key_block(SSL *ssl) {
     return 1;
   }
 
+  SSL_SESSION *session = ssl->session;
+  if (ssl->s3->new_session != NULL) {
+    session = ssl->s3->new_session;
+  }
+
   const EVP_AEAD *aead = NULL;
   size_t mac_secret_len, fixed_iv_len;
-  if (ssl->session->cipher == NULL ||
+  if (session->cipher == NULL ||
       !ssl_cipher_get_evp_aead(&aead, &mac_secret_len, &fixed_iv_len,
-                               ssl->session->cipher,
-                               ssl3_protocol_version(ssl))) {
+                               session->cipher, ssl3_protocol_version(ssl))) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_CIPHER_OR_HASH_UNAVAILABLE);
     return 0;
   }
@@ -388,29 +390,6 @@ int tls1_setup_key_block(SSL *ssl) {
   ssl->s3->tmp.key_block_length = (uint8_t)key_block_len;
   ssl->s3->tmp.key_block = keyblock;
   return 1;
-}
-
-static int tls1_cert_verify_mac(SSL *ssl, int md_nid, uint8_t *out) {
-  const EVP_MD_CTX *ctx_template;
-  if (md_nid == NID_md5) {
-    ctx_template = &ssl->s3->handshake_md5;
-  } else if (md_nid == EVP_MD_CTX_type(&ssl->s3->handshake_hash)) {
-    ctx_template = &ssl->s3->handshake_hash;
-  } else {
-    OPENSSL_PUT_ERROR(SSL, SSL_R_NO_REQUIRED_DIGEST);
-    return 0;
-  }
-
-  EVP_MD_CTX ctx;
-  EVP_MD_CTX_init(&ctx);
-  if (!EVP_MD_CTX_copy_ex(&ctx, ctx_template)) {
-    EVP_MD_CTX_cleanup(&ctx);
-    return 0;
-  }
-  unsigned ret;
-  EVP_DigestFinal_ex(&ctx, out, &ret);
-  EVP_MD_CTX_cleanup(&ctx);
-  return ret;
 }
 
 static int append_digest(const EVP_MD_CTX *ctx, uint8_t *out, size_t *out_len,
@@ -479,8 +458,8 @@ static int tls1_final_finish_mac(SSL *ssl, int from_server, uint8_t *out) {
 
   static const size_t kFinishedLen = 12;
   if (!ssl->s3->enc_method->prf(ssl, out, kFinishedLen,
-                                ssl->session->master_key,
-                                ssl->session->master_key_length, label,
+                                SSL_get_session(ssl)->master_key,
+                                SSL_get_session(ssl)->master_key_length, label,
                                 label_len, buf, digests_len, NULL, 0)) {
     return 0;
   }
@@ -526,6 +505,11 @@ int SSL_export_keying_material(SSL *ssl, uint8_t *out, size_t out_len,
     return 0;
   }
 
+  if (ssl3_protocol_version(ssl) >= TLS1_3_VERSION) {
+    return tls13_export_keying_material(ssl, out, out_len, label, label_len,
+                                        context, context_len, use_context);
+  }
+
   size_t seed_len = 2 * SSL3_RANDOM_SIZE;
   if (use_context) {
     if (context_len >= 1u << 16) {
@@ -549,8 +533,9 @@ int SSL_export_keying_material(SSL *ssl, uint8_t *out, size_t out_len,
   }
 
   int ret =
-      ssl->s3->enc_method->prf(ssl, out, out_len, ssl->session->master_key,
-                               ssl->session->master_key_length, label,
+      ssl->s3->enc_method->prf(ssl, out, out_len,
+                               SSL_get_session(ssl)->master_key,
+                               SSL_get_session(ssl)->master_key_length, label,
                                label_len, seed, seed_len, NULL, 0);
   OPENSSL_free(seed);
   return ret;
@@ -559,5 +544,4 @@ int SSL_export_keying_material(SSL *ssl, uint8_t *out, size_t out_len,
 const SSL3_ENC_METHOD TLSv1_enc_data = {
     tls1_prf,
     tls1_final_finish_mac,
-    tls1_cert_verify_mac,
 };

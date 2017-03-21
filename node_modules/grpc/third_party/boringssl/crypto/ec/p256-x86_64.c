@@ -54,20 +54,28 @@ typedef struct {
 
 typedef P256_POINT_AFFINE PRECOMP256_ROW[64];
 
-/* Functions implemented in assembly */
+/* Arithmetic on field elements using Almost Montgomery Multiplication. The
+ * "almost" means, in particular, that the inputs and outputs of these
+ * functions are in the range [0, 2**BN_BITS2), not [0, P). Only
+ * |ecp_nistz256_from_mont| outputs a fully reduced value in [0, P). Almost
+ * Montgomery Arithmetic is described clearly in "Efficient Software
+ * Implementations of Modular Exponentiation" by Shay Gueron. */
 
-/* Modular neg: res = -a mod P */
+/* Modular neg: res = -a mod P, where res is not fully reduced. */
 void ecp_nistz256_neg(BN_ULONG res[P256_LIMBS], const BN_ULONG a[P256_LIMBS]);
-/* Montgomery mul: res = a*b*2^-256 mod P */
+/* Montgomery mul: res = a*b*2^-256 mod P, where res is not fully reduced. */
 void ecp_nistz256_mul_mont(BN_ULONG res[P256_LIMBS],
                            const BN_ULONG a[P256_LIMBS],
                            const BN_ULONG b[P256_LIMBS]);
-/* Montgomery sqr: res = a*a*2^-256 mod P */
+/* Montgomery sqr: res = a*a*2^-256 mod P, where res is not fully reduced. */
 void ecp_nistz256_sqr_mont(BN_ULONG res[P256_LIMBS],
                            const BN_ULONG a[P256_LIMBS]);
-/* Convert a number from Montgomery domain, by multiplying with 1 */
+/* Convert a number from Montgomery domain, by multiplying with 1, where res
+ * will be fully reduced mod P. */
 void ecp_nistz256_from_mont(BN_ULONG res[P256_LIMBS],
                             const BN_ULONG in[P256_LIMBS]);
+
+
 /* Functions that perform constant time access to the precomputed tables */
 void ecp_nistz256_select_w5(P256_POINT *val, const P256_POINT *in_t, int index);
 void ecp_nistz256_select_w7(P256_POINT_AFFINE *val,
@@ -205,9 +213,7 @@ static void ecp_nistz256_mod_inverse(BN_ULONG r[P256_LIMBS],
 
   ecp_nistz256_sqr_mont(res, res);
   ecp_nistz256_sqr_mont(res, res);
-  ecp_nistz256_mul_mont(res, res, in);
-
-  memcpy(r, res, sizeof(res));
+  ecp_nistz256_mul_mont(r, res, in);
 }
 
 /* ecp_nistz256_bignum_to_field_elem copies the contents of |in| to |out| and
@@ -314,7 +320,7 @@ static int ecp_nistz256_windowed_mul(const EC_GROUP *group, P256_POINT *r,
   ecp_nistz256_point_double(&row[10 - 1], &row[5 - 1]);
   ecp_nistz256_point_add(&row[15 - 1], &row[14 - 1], &row[1 - 1]);
   ecp_nistz256_point_add(&row[11 - 1], &row[10 - 1], &row[1 - 1]);
-  ecp_nistz256_point_add(&row[16 - 1], &row[15 - 1], &row[1 - 1]);
+  ecp_nistz256_point_double(&row[16 - 1], &row[8 - 1]);
 
   BN_ULONG tmp[P256_LIMBS];
   alignas(32) P256_POINT h;
@@ -389,17 +395,6 @@ static int ecp_nistz256_points_mul(
   int ret = 0;
   BN_CTX *new_ctx = NULL;
   int ctx_started = 0;
-
-  /* Need 256 bits for space for all coordinates. */
-  if (bn_wexpand(&r->X, P256_LIMBS) == NULL ||
-      bn_wexpand(&r->Y, P256_LIMBS) == NULL ||
-      bn_wexpand(&r->Z, P256_LIMBS) == NULL) {
-    OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
-    goto err;
-  }
-  r->X.top = P256_LIMBS;
-  r->Y.top = P256_LIMBS;
-  r->Z.top = P256_LIMBS;
 
   if (g_scalar != NULL) {
     if (BN_num_bits(g_scalar) > 256 || BN_is_negative(g_scalar)) {
@@ -494,15 +489,12 @@ static int ecp_nistz256_points_mul(
     }
   }
 
-  memcpy(r->X.d, p.p.X, sizeof(p.p.X));
-  memcpy(r->Y.d, p.p.Y, sizeof(p.p.Y));
-  memcpy(r->Z.d, p.p.Z, sizeof(p.p.Z));
-
   /* Not constant-time, but we're only operating on the public output. */
-  bn_correct_top(&r->X);
-  bn_correct_top(&r->Y);
-  bn_correct_top(&r->Z);
-  r->Z_is_one = BN_is_one(&r->Z);
+  if (!bn_set_words(&r->X, p.p.X, P256_LIMBS) ||
+      !bn_set_words(&r->Y, p.p.Y, P256_LIMBS) ||
+      !bn_set_words(&r->Z, p.p.Z, P256_LIMBS)) {
+    return 0;
+  }
 
   ret = 1;
 
@@ -518,8 +510,6 @@ static int ecp_nistz256_get_affine(const EC_GROUP *group, const EC_POINT *point,
                                    BIGNUM *x, BIGNUM *y, BN_CTX *ctx) {
   BN_ULONG z_inv2[P256_LIMBS];
   BN_ULONG z_inv3[P256_LIMBS];
-  BN_ULONG x_aff[P256_LIMBS];
-  BN_ULONG y_aff[P256_LIMBS];
   BN_ULONG point_x[P256_LIMBS], point_y[P256_LIMBS], point_z[P256_LIMBS];
 
   if (EC_POINT_is_at_infinity(group, point)) {
@@ -536,51 +526,49 @@ static int ecp_nistz256_get_affine(const EC_GROUP *group, const EC_POINT *point,
 
   ecp_nistz256_mod_inverse(z_inv3, point_z);
   ecp_nistz256_sqr_mont(z_inv2, z_inv3);
-  ecp_nistz256_mul_mont(x_aff, z_inv2, point_x);
+
+  /* Unlike the |BN_mod_mul_montgomery|-based implementation, we cannot factor
+   * out the two calls to |ecp_nistz256_from_mont| into one call, because
+   * |ecp_nistz256_from_mont| must be the last operation to ensure that the
+   * result is fully reduced mod P. */
 
   if (x != NULL) {
-    if (bn_wexpand(x, P256_LIMBS) == NULL) {
+    BN_ULONG x_aff[P256_LIMBS];
+    ecp_nistz256_mul_mont(x_aff, z_inv2, point_x);
+    ecp_nistz256_from_mont(x_aff, x_aff);
+    if (!bn_set_words(x, x_aff, P256_LIMBS)) {
       OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
       return 0;
     }
-    x->top = P256_LIMBS;
-    ecp_nistz256_from_mont(x->d, x_aff);
-    bn_correct_top(x);
   }
 
   if (y != NULL) {
+    BN_ULONG y_aff[P256_LIMBS];
     ecp_nistz256_mul_mont(z_inv3, z_inv3, z_inv2);
     ecp_nistz256_mul_mont(y_aff, z_inv3, point_y);
-    if (bn_wexpand(y, P256_LIMBS) == NULL) {
+    ecp_nistz256_from_mont(y_aff, y_aff);
+    if (!bn_set_words(y, y_aff, P256_LIMBS)) {
       OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
       return 0;
     }
-    y->top = P256_LIMBS;
-    ecp_nistz256_from_mont(y->d, y_aff);
-    bn_correct_top(y);
   }
 
   return 1;
 }
 
-const EC_METHOD *EC_GFp_nistz256_method(void) {
-  static const EC_METHOD ret = {
-      ec_GFp_mont_group_init,
-      ec_GFp_mont_group_finish,
-      ec_GFp_mont_group_copy,
-      ec_GFp_mont_group_set_curve,
-      ecp_nistz256_get_affine,
-      ecp_nistz256_points_mul,
-      0 /* check_pub_key_order */,
-      ec_GFp_mont_field_mul,
-      ec_GFp_mont_field_sqr,
-      ec_GFp_mont_field_encode,
-      ec_GFp_mont_field_decode,
-      ec_GFp_mont_field_set_to_one,
-  };
 
-  return &ret;
-}
+const EC_METHOD EC_GFp_nistz256_method = {
+    ec_GFp_mont_group_init,
+    ec_GFp_mont_group_finish,
+    ec_GFp_mont_group_copy,
+    ec_GFp_mont_group_set_curve,
+    ecp_nistz256_get_affine,
+    ecp_nistz256_points_mul,
+    ec_GFp_mont_field_mul,
+    ec_GFp_mont_field_sqr,
+    ec_GFp_mont_field_encode,
+    ec_GFp_mont_field_decode,
+};
 
 #endif /* !defined(OPENSSL_NO_ASM) && defined(OPENSSL_X86_64) && \
           !defined(OPENSSL_SMALL) */

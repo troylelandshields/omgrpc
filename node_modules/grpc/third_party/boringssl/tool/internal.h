@@ -20,18 +20,28 @@
 #include <string>
 #include <vector>
 
-#if defined(_MSC_VER)
-#pragma warning(push)
+OPENSSL_MSVC_PRAGMA(warning(push))
 // MSVC issues warning C4702 for unreachable code in its xtree header when
 // compiling with -D_HAS_EXCEPTIONS=0. See
 // https://connect.microsoft.com/VisualStudio/feedback/details/809962
-#pragma warning(disable: 4702)
-#endif
+OPENSSL_MSVC_PRAGMA(warning(disable: 4702))
 
 #include <map>
 
-#if defined(_MSC_VER)
-#pragma warning(pop)
+OPENSSL_MSVC_PRAGMA(warning(pop))
+
+#if defined(OPENSSL_WINDOWS)
+  #define BORINGSSL_OPEN _open
+  #define BORINGSSL_FDOPEN _fdopen
+  #define BORINGSSL_CLOSE _close
+  #define BORINGSSL_READ _read
+  #define BORINGSSL_WRITE _write
+#else
+  #define BORINGSSL_OPEN open
+  #define BORINGSSL_FDOPEN fdopen
+  #define BORINGSSL_CLOSE close
+  #define BORINGSSL_READ read
+  #define BORINGSSL_WRITE write
 #endif
 
 enum ArgumentType {
@@ -54,6 +64,21 @@ void PrintUsage(const struct argument *templates);
 bool GetUnsigned(unsigned *out, const std::string &arg_name,
                  unsigned default_value,
                  const std::map<std::string, std::string> &args);
+
+bool Ciphers(const std::vector<std::string> &args);
+bool Client(const std::vector<std::string> &args);
+bool DoPKCS12(const std::vector<std::string> &args);
+bool GenerateEd25519Key(const std::vector<std::string> &args);
+bool GenerateRSAKey(const std::vector<std::string> &args);
+bool MD5Sum(const std::vector<std::string> &args);
+bool Rand(const std::vector<std::string> &args);
+bool SHA1Sum(const std::vector<std::string> &args);
+bool SHA224Sum(const std::vector<std::string> &args);
+bool SHA256Sum(const std::vector<std::string> &args);
+bool SHA384Sum(const std::vector<std::string> &args);
+bool SHA512Sum(const std::vector<std::string> &args);
+bool Server(const std::vector<std::string> &args);
+bool Speed(const std::vector<std::string> &args);
 
 // These values are DER encoded, RSA private keys.
 extern const uint8_t kDERRSAPrivate2048[];

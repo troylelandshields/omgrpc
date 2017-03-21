@@ -85,7 +85,7 @@ static int setup_read_buffer(SSL *ssl) {
 
   size_t header_len = ssl_record_prefix_len(ssl);
   size_t cap = SSL3_RT_MAX_ENCRYPTED_LENGTH;
-  if (SSL_IS_DTLS(ssl)) {
+  if (SSL_is_dtls(ssl)) {
     cap += DTLS1_RT_HEADER_LENGTH;
   } else {
     cap += SSL3_RT_HEADER_LENGTH;
@@ -113,12 +113,11 @@ static int dtls_read_buffer_next_packet(SSL *ssl) {
   }
 
   /* Read a single packet from |ssl->rbio|. |buf->cap| must fit in an int. */
-  ssl->rwstate = SSL_READING;
   int ret = BIO_read(ssl->rbio, buf->buf + buf->offset, (int)buf->cap);
   if (ret <= 0) {
+    ssl->rwstate = SSL_READING;
     return ret;
   }
-  ssl->rwstate = SSL_NOTHING;
   /* |BIO_read| was bound by |buf->cap|, so this cannot overflow. */
   buf->len = (uint16_t)ret;
   return 1;
@@ -136,13 +135,12 @@ static int tls_read_buffer_extend_to(SSL *ssl, size_t len) {
   while (buf->len < len) {
     /* The amount of data to read is bounded by |buf->cap|, which must fit in an
      * int. */
-    ssl->rwstate = SSL_READING;
     int ret = BIO_read(ssl->rbio, buf->buf + buf->offset + buf->len,
                        (int)(len - buf->len));
     if (ret <= 0) {
+      ssl->rwstate = SSL_READING;
       return ret;
     }
-    ssl->rwstate = SSL_NOTHING;
     /* |BIO_read| was bound by |buf->cap - buf->len|, so this cannot
      * overflow. */
     buf->len += (uint16_t)ret;
@@ -164,10 +162,8 @@ int ssl_read_buffer_extend_to(SSL *ssl, size_t len) {
     return -1;
   }
 
-  ERR_clear_system_error();
-
   int ret;
-  if (SSL_IS_DTLS(ssl)) {
+  if (SSL_is_dtls(ssl)) {
     /* |len| is ignored for a datagram transport. */
     ret = dtls_read_buffer_next_packet(ssl);
   } else {
@@ -186,14 +182,13 @@ void ssl_read_buffer_consume(SSL *ssl, size_t len) {
   SSL3_BUFFER *buf = &ssl->s3->read_buffer;
 
   consume_buffer(buf, len);
-  if (!SSL_IS_DTLS(ssl)) {
-    /* The TLS stack never reads beyond the current record, so there will never
-     * be unconsumed data. If read-ahead is ever reimplemented,
-     * |ssl_read_buffer_discard| will require a |memcpy| to shift the excess
-     * back to the front of the buffer, to ensure there is enough space for the
-     * next record. */
-     assert(buf->len == 0);
-  }
+
+  /* The TLS stack never reads beyond the current record, so there will never be
+   * unconsumed data. If read-ahead is ever reimplemented,
+   * |ssl_read_buffer_discard| will require a |memcpy| to shift the excess back
+   * to the front of the buffer, to ensure there is enough space for the next
+   * record. */
+  assert(SSL_is_dtls(ssl) || len == 0 || buf->len == 0);
 }
 
 void ssl_read_buffer_discard(SSL *ssl) {
@@ -229,12 +224,12 @@ int ssl_write_buffer_init(SSL *ssl, uint8_t **out_ptr, size_t max_len) {
     return 0;
   }
 
-  size_t header_len = ssl_seal_prefix_len(ssl);
+  size_t header_len = ssl_seal_align_prefix_len(ssl);
 
   /* TODO(davidben): This matches the original behavior in keeping the malloc
    * size consistent. Does this matter? |cap| could just be |max_len|. */
   size_t cap = SSL3_RT_MAX_PLAIN_LENGTH + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD;
-  if (SSL_IS_DTLS(ssl)) {
+  if (SSL_is_dtls(ssl)) {
     cap += DTLS1_RT_HEADER_LENGTH;
   } else {
     cap += SSL3_RT_HEADER_LENGTH;
@@ -268,12 +263,11 @@ static int tls_write_buffer_flush(SSL *ssl) {
   SSL3_BUFFER *buf = &ssl->s3->write_buffer;
 
   while (buf->len > 0) {
-    ssl->rwstate = SSL_WRITING;
     int ret = BIO_write(ssl->wbio, buf->buf + buf->offset, buf->len);
     if (ret <= 0) {
+      ssl->rwstate = SSL_WRITING;
       return ret;
     }
-    ssl->rwstate = SSL_NOTHING;
     consume_buffer(buf, (size_t)ret);
   }
   ssl_write_buffer_clear(ssl);
@@ -286,16 +280,15 @@ static int dtls_write_buffer_flush(SSL *ssl) {
     return 1;
   }
 
-  ssl->rwstate = SSL_WRITING;
   int ret = BIO_write(ssl->wbio, buf->buf + buf->offset, buf->len);
   if (ret <= 0) {
+    ssl->rwstate = SSL_WRITING;
     /* If the write failed, drop the write buffer anyway. Datagram transports
      * can't write half a packet, so the caller is expected to retry from the
      * top. */
     ssl_write_buffer_clear(ssl);
     return ret;
   }
-  ssl->rwstate = SSL_NOTHING;
   ssl_write_buffer_clear(ssl);
   return 1;
 }
@@ -305,9 +298,8 @@ int ssl_write_buffer_flush(SSL *ssl) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_BIO_NOT_SET);
     return -1;
   }
-  ERR_clear_system_error();
 
-  if (SSL_IS_DTLS(ssl)) {
+  if (SSL_is_dtls(ssl)) {
     return dtls_write_buffer_flush(ssl);
   } else {
     return tls_write_buffer_flush(ssl);

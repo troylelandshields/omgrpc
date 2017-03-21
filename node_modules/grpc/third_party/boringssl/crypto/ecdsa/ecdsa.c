@@ -79,10 +79,6 @@ int ECDSA_verify(int type, const uint8_t *digest, size_t digest_len,
   int ret = 0;
   uint8_t *der = NULL;
 
-  if (eckey->ecdsa_meth && eckey->ecdsa_meth->verify) {
-    return eckey->ecdsa_meth->verify(digest, digest_len, sig, sig_len, eckey);
-  }
-
   /* Decode the ECDSA signature. */
   s = ECDSA_SIG_from_bytes(sig, sig_len);
   if (s == NULL) {
@@ -148,11 +144,6 @@ int ECDSA_do_verify(const uint8_t *digest, size_t digest_len,
   const EC_GROUP *group;
   const EC_POINT *pub_key;
 
-  if (eckey->ecdsa_meth && eckey->ecdsa_meth->verify) {
-    OPENSSL_PUT_ERROR(ECDSA, ECDSA_R_NOT_IMPLEMENTED);
-    return 0;
-  }
-
   /* check input values */
   if ((group = EC_KEY_get0_group(eckey)) == NULL ||
       (pub_key = EC_KEY_get0_public_key(eckey)) == NULL ||
@@ -185,7 +176,8 @@ int ECDSA_do_verify(const uint8_t *digest, size_t digest_len,
     goto err;
   }
   /* calculate tmp1 = inv(S) mod order */
-  if (!BN_mod_inverse(u2, sig->s, order, ctx)) {
+  int no_inverse;
+  if (!BN_mod_inverse_odd(u2, &no_inverse, sig->s, order, ctx)) {
     OPENSSL_PUT_ERROR(ECDSA, ERR_R_BN_LIB);
     goto err;
   }
@@ -234,7 +226,7 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in, BIGNUM **kinvp,
                             BIGNUM **rp, const uint8_t *digest,
                             size_t digest_len) {
   BN_CTX *ctx = NULL;
-  BIGNUM *k = NULL, *r = NULL, *X = NULL;
+  BIGNUM *k = NULL, *r = NULL, *tmp = NULL;
   EC_POINT *tmp_point = NULL;
   const EC_GROUP *group;
   int ret = 0;
@@ -255,8 +247,8 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in, BIGNUM **kinvp,
 
   k = BN_new(); /* this value is later returned in *kinvp */
   r = BN_new(); /* this value is later returned in *rp    */
-  X = BN_new();
-  if (k == NULL || r == NULL || X == NULL) {
+  tmp = BN_new();
+  if (k == NULL || r == NULL || tmp == NULL) {
     OPENSSL_PUT_ERROR(ECDSA, ERR_R_MALLOC_FAILURE);
     goto err;
   }
@@ -272,20 +264,18 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in, BIGNUM **kinvp,
     /* If possible, we'll include the private key and message digest in the k
      * generation. The |digest| argument is only empty if |ECDSA_sign_setup| is
      * being used. */
-    do {
-      int ok;
-
-      if (digest_len > 0) {
-        ok = BN_generate_dsa_nonce(k, order, EC_KEY_get0_private_key(eckey),
-                                   digest, digest_len, ctx);
-      } else {
-        ok = BN_rand_range(k, order);
-      }
-      if (!ok) {
-        OPENSSL_PUT_ERROR(ECDSA, ECDSA_R_RANDOM_NUMBER_GENERATION_FAILED);
-        goto err;
-      }
-    } while (BN_is_zero(k));
+    if (digest_len > 0) {
+      do {
+        if (!BN_generate_dsa_nonce(k, order, EC_KEY_get0_private_key(eckey),
+                                   digest, digest_len, ctx)) {
+          OPENSSL_PUT_ERROR(ECDSA, ECDSA_R_RANDOM_NUMBER_GENERATION_FAILED);
+          goto err;
+        }
+      } while (BN_is_zero(k));
+    } else if (!BN_rand_range_ex(k, 1, order)) {
+      OPENSSL_PUT_ERROR(ECDSA, ECDSA_R_RANDOM_NUMBER_GENERATION_FAILED);
+      goto err;
+    }
 
     /* We do not want timing information to leak the length of k,
      * so we compute G*k using an equivalent scalar of fixed
@@ -305,33 +295,25 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in, BIGNUM **kinvp,
       OPENSSL_PUT_ERROR(ECDSA, ERR_R_EC_LIB);
       goto err;
     }
-    if (!EC_POINT_get_affine_coordinates_GFp(group, tmp_point, X, NULL, ctx)) {
+    if (!EC_POINT_get_affine_coordinates_GFp(group, tmp_point, tmp, NULL,
+                                             ctx)) {
       OPENSSL_PUT_ERROR(ECDSA, ERR_R_EC_LIB);
       goto err;
     }
 
-    if (!BN_nnmod(r, X, order, ctx)) {
+    if (!BN_nnmod(r, tmp, order, ctx)) {
       OPENSSL_PUT_ERROR(ECDSA, ERR_R_BN_LIB);
       goto err;
     }
   } while (BN_is_zero(r));
 
-  /* compute the inverse of k */
-  if (ec_group_get_mont_data(group) != NULL) {
-    /* We want inverse in constant time, therefore we use that the order must
-     * be prime and thus we can use Fermat's Little Theorem. */
-    if (!BN_set_word(X, 2) ||
-        !BN_sub(X, order, X)) {
-      OPENSSL_PUT_ERROR(ECDSA, ERR_R_BN_LIB);
-      goto err;
-    }
-    BN_set_flags(X, BN_FLG_CONSTTIME);
-    if (!BN_mod_exp_mont_consttime(k, k, X, order, ctx,
-                                   ec_group_get_mont_data(group))) {
-      OPENSSL_PUT_ERROR(ECDSA, ERR_R_BN_LIB);
-      goto err;
-    }
-  } else if (!BN_mod_inverse(k, k, order, ctx)) {
+  /* Compute the inverse of k. The order is a prime, so use Fermat's Little
+   * Theorem. */
+  if (!BN_set_word(tmp, 2) ||
+      !BN_sub(tmp, order, tmp) ||
+      /* Note |ec_group_get_mont_data| may return NULL but |BN_mod_exp_mont|
+       * allows it to be. */
+      !BN_mod_exp_mont(k, k, tmp, order, ctx, ec_group_get_mont_data(group))) {
     OPENSSL_PUT_ERROR(ECDSA, ERR_R_BN_LIB);
     goto err;
   }
@@ -353,7 +335,7 @@ err:
     BN_CTX_free(ctx);
   }
   EC_POINT_free(tmp_point);
-  BN_clear_free(X);
+  BN_clear_free(tmp);
   return ret;
 }
 

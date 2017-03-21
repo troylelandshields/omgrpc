@@ -42,9 +42,10 @@
 #include <grpc/support/string_util.h>
 #include <grpc/support/sync.h>
 
-static void iam_destruct(grpc_call_credentials *creds) {
+static void iam_destruct(grpc_exec_ctx *exec_ctx,
+                         grpc_call_credentials *creds) {
   grpc_google_iam_credentials *c = (grpc_google_iam_credentials *)creds;
-  grpc_credentials_md_store_unref(c->iam_md);
+  grpc_credentials_md_store_unref(exec_ctx, c->iam_md);
 }
 
 static void iam_get_request_metadata(grpc_exec_ctx *exec_ctx,
@@ -71,8 +72,7 @@ grpc_call_credentials *grpc_google_iam_credentials_create(
   GPR_ASSERT(reserved == NULL);
   GPR_ASSERT(token != NULL);
   GPR_ASSERT(authority_selector != NULL);
-  c = gpr_malloc(sizeof(grpc_google_iam_credentials));
-  memset(c, 0, sizeof(grpc_google_iam_credentials));
+  c = gpr_zalloc(sizeof(grpc_google_iam_credentials));
   c->base.type = GRPC_CALL_CREDENTIALS_TYPE_IAM;
   c->base.vtable = &iam_vtable;
   gpr_ref_init(&c->base.refcount, 1);

@@ -26,21 +26,8 @@
 #include <libgen.h>
 #endif
 
+#include "internal.h"
 
-bool Ciphers(const std::vector<std::string> &args);
-bool Client(const std::vector<std::string> &args);
-bool DoPKCS12(const std::vector<std::string> &args);
-bool GenerateEd25519Key(const std::vector<std::string> &args);
-bool GenerateRSAKey(const std::vector<std::string> &args);
-bool MD5Sum(const std::vector<std::string> &args);
-bool Rand(const std::vector<std::string> &args);
-bool SHA1Sum(const std::vector<std::string> &args);
-bool SHA224Sum(const std::vector<std::string> &args);
-bool SHA256Sum(const std::vector<std::string> &args);
-bool SHA384Sum(const std::vector<std::string> &args);
-bool SHA512Sum(const std::vector<std::string> &args);
-bool Server(const std::vector<std::string> &args);
-bool Speed(const std::vector<std::string> &args);
 
 typedef bool (*tool_func_t)(const std::vector<std::string> &args);
 
@@ -83,7 +70,7 @@ static void usage(const char *name) {
   }
 }
 
-tool_func_t FindTool(const std::string &name) {
+static tool_func_t FindTool(const std::string &name) {
   for (size_t i = 0;; i++) {
     const Tool &tool = kTools[i];
     if (tool.func == nullptr || name == tool.name) {

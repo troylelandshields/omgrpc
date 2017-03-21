@@ -56,12 +56,10 @@
 
 #include <openssl/evp.h>
 
-#include <stdio.h>
 #include <string.h>
 
 #include <openssl/err.h>
 #include <openssl/mem.h>
-#include <openssl/obj.h>
 
 #include "internal.h"
 
@@ -98,8 +96,7 @@ static EVP_PKEY_CTX *evp_pkey_ctx_new(EVP_PKEY *pkey, ENGINE *e, int id) {
 
   if (pmeth == NULL) {
     OPENSSL_PUT_ERROR(EVP, EVP_R_UNSUPPORTED_ALGORITHM);
-    const char *name = OBJ_nid2sn(id);
-    ERR_add_error_dataf("algorithm %d (%s)", id, name);
+    ERR_add_error_dataf("algorithm %d", id);
     return NULL;
   }
 
@@ -115,7 +112,8 @@ static EVP_PKEY_CTX *evp_pkey_ctx_new(EVP_PKEY *pkey, ENGINE *e, int id) {
   ret->operation = EVP_PKEY_OP_UNDEFINED;
 
   if (pkey) {
-    ret->pkey = EVP_PKEY_up_ref(pkey);
+    EVP_PKEY_up_ref(pkey);
+    ret->pkey = pkey;
   }
 
   if (pmeth->init) {
@@ -168,14 +166,16 @@ EVP_PKEY_CTX *EVP_PKEY_CTX_dup(EVP_PKEY_CTX *pctx) {
   rctx->operation = pctx->operation;
 
   if (pctx->pkey) {
-    rctx->pkey = EVP_PKEY_up_ref(pctx->pkey);
+    EVP_PKEY_up_ref(pctx->pkey);
+    rctx->pkey = pctx->pkey;
     if (rctx->pkey == NULL) {
       goto err;
     }
   }
 
   if (pctx->peerkey) {
-    rctx->peerkey = EVP_PKEY_up_ref(pctx->peerkey);
+    EVP_PKEY_up_ref(pctx->peerkey);
+    rctx->peerkey = pctx->peerkey;
     if (rctx->peerkey == NULL) {
       goto err;
     }

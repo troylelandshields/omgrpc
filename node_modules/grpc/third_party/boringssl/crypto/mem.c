@@ -66,17 +66,23 @@
 #include <string.h>
 
 #if defined(OPENSSL_WINDOWS)
-#pragma warning(push, 3)
+OPENSSL_MSVC_PRAGMA(warning(push, 3))
 #include <windows.h>
-#pragma warning(pop)
+
+/* Work around a clang-cl bug: SecureZeroMemory() below uses __stosb() but
+ * windows.h only declares that intrinsic and then uses `#pragma intrinsic` for
+ * it.  clang-cl doesn't implement `#pragma intrinsic` yet; it instead defines
+ * the function as an always-inline symbol in its intrin.h.
+ * TODO(thakis): Remove this once http://llvm.org/PR19898 is fixed.
+ */
+#include <intrin.h>
+OPENSSL_MSVC_PRAGMA(warning(pop))
 #else
 #include <strings.h>
 #endif
 
 
 void *OPENSSL_realloc_clean(void *ptr, size_t old_size, size_t new_size) {
-  void *ret = NULL;
-
   if (ptr == NULL) {
     return OPENSSL_malloc(new_size);
   }
@@ -91,7 +97,7 @@ void *OPENSSL_realloc_clean(void *ptr, size_t old_size, size_t new_size) {
     return NULL;
   }
 
-  ret = OPENSSL_malloc(new_size);
+  void *ret = OPENSSL_malloc(new_size);
   if (ret == NULL) {
     return NULL;
   }
@@ -118,12 +124,11 @@ void OPENSSL_cleanse(void *ptr, size_t len) {
 }
 
 int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len) {
-  size_t i;
   const uint8_t *a = in_a;
   const uint8_t *b = in_b;
   uint8_t x = 0;
 
-  for (i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     x |= a[i] ^ b[i];
   }
 
@@ -136,10 +141,9 @@ uint32_t OPENSSL_hash32(const void *ptr, size_t len) {
   static const uint32_t kOffsetBasis = 2166136261u;
 
   const uint8_t *in = ptr;
-  size_t i;
   uint32_t h = kOffsetBasis;
 
-  for (i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     h ^= in[i];
     h *= kPrime;
   }
@@ -147,12 +151,8 @@ uint32_t OPENSSL_hash32(const void *ptr, size_t len) {
   return h;
 }
 
-char *OPENSSL_strdup(const char *s) { return strdup(s); }
-
 size_t OPENSSL_strnlen(const char *s, size_t len) {
-  size_t i;
-
-  for (i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) {
     if (s[i] == 0) {
       return i;
     }
@@ -163,6 +163,8 @@ size_t OPENSSL_strnlen(const char *s, size_t len) {
 
 #if defined(OPENSSL_WINDOWS)
 
+char *OPENSSL_strdup(const char *s) { return _strdup(s); }
+
 int OPENSSL_strcasecmp(const char *a, const char *b) {
   return _stricmp(a, b);
 }
@@ -172,6 +174,8 @@ int OPENSSL_strncasecmp(const char *a, const char *b, size_t n) {
 }
 
 #else
+
+char *OPENSSL_strdup(const char *s) { return strdup(s); }
 
 int OPENSSL_strcasecmp(const char *a, const char *b) {
   return strcasecmp(a, b);
@@ -185,12 +189,8 @@ int OPENSSL_strncasecmp(const char *a, const char *b, size_t n) {
 
 int BIO_snprintf(char *buf, size_t n, const char *format, ...) {
   va_list args;
-  int ret;
-
   va_start(args, format);
-
-  ret = BIO_vsnprintf(buf, n, format, args);
-
+  int ret = BIO_vsnprintf(buf, n, format, args);
   va_end(args);
   return ret;
 }

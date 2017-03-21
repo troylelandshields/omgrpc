@@ -126,9 +126,9 @@
 #include <openssl/base.h>
 
 #if defined(OPENSSL_X86_64) && defined(_MSC_VER)
-#pragma warning(push, 3)
+OPENSSL_MSVC_PRAGMA(warning(push, 3))
 #include <intrin.h>
-#pragma warning(pop)
+OPENSSL_MSVC_PRAGMA(warning(pop))
 #pragma intrinsic(__umulh, _umul128)
 #endif
 
@@ -156,6 +156,7 @@ BIGNUM *bn_expand(BIGNUM *bn, size_t bits);
 #define BN_MASK2l	(0xffffffffUL)
 #define BN_MASK2h	(0xffffffff00000000UL)
 #define BN_MASK2h1	(0xffffffff80000000UL)
+#define BN_MONT_CTX_N0_LIMBS 1
 #define BN_TBIT		(0x8000000000000000UL)
 #define BN_DEC_CONV	(10000000000000000000UL)
 #define BN_DEC_NUM	19
@@ -171,6 +172,12 @@ BIGNUM *bn_expand(BIGNUM *bn, size_t bits);
 #define BN_MASK2l	(0xffffUL)
 #define BN_MASK2h1	(0xffff8000UL)
 #define BN_MASK2h	(0xffff0000UL)
+/* On some 32-bit platforms, Montgomery multiplication is done using 64-bit
+ * arithmetic with SIMD instructions. On such platforms, |BN_MONT_CTX::n0|
+ * needs to be two words long. Only certain 32-bit platforms actually make use
+ * of n0[1] and shorter R value would suffice for the others. However,
+ * currently only the assembly files know which is which. */
+#define BN_MONT_CTX_N0_LIMBS 2
 #define BN_TBIT		(0x80000000UL)
 #define BN_DEC_CONV	(1000000000UL)
 #define BN_DEC_NUM	9
@@ -192,10 +199,13 @@ BIGNUM *bn_expand(BIGNUM *bn, size_t bits);
 #define Hw(t) (((BN_ULONG)((t)>>BN_BITS2))&BN_MASK2)
 #endif
 
+/* bn_set_words sets |bn| to the value encoded in the |num| words in |words|,
+ * least significant word first. */
+int bn_set_words(BIGNUM *bn, const BN_ULONG *words, size_t num);
+
 BN_ULONG bn_mul_add_words(BN_ULONG *rp, const BN_ULONG *ap, int num, BN_ULONG w);
 BN_ULONG bn_mul_words(BN_ULONG *rp, const BN_ULONG *ap, int num, BN_ULONG w);
 void     bn_sqr_words(BN_ULONG *rp, const BN_ULONG *ap, int num);
-BN_ULONG bn_div_words(BN_ULONG h, BN_ULONG l, BN_ULONG d);
 BN_ULONG bn_add_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,int num);
 BN_ULONG bn_sub_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,int num);
 
@@ -216,6 +226,8 @@ int bn_cmp_part_words(const BN_ULONG *a, const BN_ULONG *b, int cl, int dl);
 
 int bn_mul_mont(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,
                 const BN_ULONG *np, const BN_ULONG *n0, int num);
+
+uint64_t bn_mont_n0(const BIGNUM *n);
 
 #if defined(OPENSSL_X86_64) && defined(_MSC_VER)
 #define BN_UMULT_LOHI(low, high, a, b) ((low) = _umul128((a), (b), &(high)))

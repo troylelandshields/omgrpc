@@ -31,10 +31,10 @@
  *
  */
 
-#include <grpc/support/port_platform.h>
 #include <stdint.h>
+#include "src/core/lib/iomgr/port.h"
 
-#ifdef GPR_WINSOCK_SOCKET
+#ifdef GRPC_WINSOCK_SOCKET
 
 #include "src/core/lib/iomgr/pollset_set_windows.h"
 
@@ -42,7 +42,8 @@ grpc_pollset_set* grpc_pollset_set_create(void) {
   return (grpc_pollset_set*)((intptr_t)0xdeafbeef);
 }
 
-void grpc_pollset_set_destroy(grpc_pollset_set* pollset_set) {}
+void grpc_pollset_set_destroy(grpc_exec_ctx* exec_ctx,
+                              grpc_pollset_set* pollset_set) {}
 
 void grpc_pollset_set_add_pollset(grpc_exec_ctx* exec_ctx,
                                   grpc_pollset_set* pollset_set,
@@ -60,4 +61,4 @@ void grpc_pollset_set_del_pollset_set(grpc_exec_ctx* exec_ctx,
                                       grpc_pollset_set* bag,
                                       grpc_pollset_set* item) {}
 
-#endif /* GPR_WINSOCK_SOCKET */
+#endif /* GRPC_WINSOCK_SOCKET */

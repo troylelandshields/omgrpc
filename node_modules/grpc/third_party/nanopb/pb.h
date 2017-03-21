@@ -13,10 +13,6 @@
 /* Enable support for dynamically allocated fields */
 /* #define PB_ENABLE_MALLOC 1 */
 
-/* Define this if your CPU architecture is big endian, i.e. it
- * stores the most-significant byte first. */
-/* #define __BIG_ENDIAN__ 1 */
-
 /* Define this if your CPU / compiler combination does not support
  * unaligned memory access to packed structures. */
 /* #define PB_NO_PACKED_STRUCTS 1 */
@@ -50,12 +46,12 @@
 
 /* Version of the nanopb library. Just in case you want to check it in
  * your own program. */
-#define NANOPB_VERSION nanopb-0.3.5-dev
+#define NANOPB_VERSION nanopb-0.3.7-dev
 
 /* Include all the system headers needed by nanopb. You will need the
  * definitions of the following:
  * - strlen, memcpy, memset functions
- * - [u]int8_t, [u]int16_t, [u]int32_t, [u]int64_t
+ * - [u]int_least8_t, uint_fast8_t, [u]int_least16_t, [u]int32_t, [u]int64_t
  * - size_t
  * - bool
  *
@@ -144,7 +140,7 @@
  * Most-significant 4 bits specify repeated/required/packed etc.
  */
 
-typedef uint8_t pb_type_t;
+typedef uint_least8_t pb_type_t;
 
 /**** Field data types ****/
 
@@ -174,8 +170,14 @@ typedef uint8_t pb_type_t;
  * The field contains a pointer to pb_extension_t */
 #define PB_LTYPE_EXTENSION 0x08
 
+/* Byte array with inline, pre-allocated byffer.
+ * data_size is the length of the inline, allocated buffer.
+ * This differs from PB_LTYPE_BYTES by defining the element as
+ * pb_byte_t[data_size] rather than pb_bytes_array_t. */
+#define PB_LTYPE_FIXED_LENGTH_BYTES 0x09
+
 /* Number of declared LTYPES */
-#define PB_LTYPES_COUNT 9
+#define PB_LTYPES_COUNT 0x0A
 #define PB_LTYPE_MASK 0x0F
 
 /**** Field repetition rules ****/
@@ -201,18 +203,22 @@ typedef uint8_t pb_type_t;
  * and array counts.
  */
 #if defined(PB_FIELD_32BIT)
-#define PB_SIZE_MAX ((uint32_t)-1)
     typedef uint32_t pb_size_t;
     typedef int32_t pb_ssize_t;
 #elif defined(PB_FIELD_16BIT)
-#define PB_SIZE_MAX ((uint16_t)-1)
-    typedef uint16_t pb_size_t;
-    typedef int16_t pb_ssize_t;
+    typedef uint_least16_t pb_size_t;
+    typedef int_least16_t pb_ssize_t;
 #else
-#define PB_SIZE_MAX ((uint8_t)-1)
-    typedef uint8_t pb_size_t;
-    typedef int8_t pb_ssize_t;
+    typedef uint_least8_t pb_size_t;
+    typedef int_least8_t pb_ssize_t;
 #endif
+#define PB_SIZE_MAX ((pb_size_t)-1)
+
+/* Data type for storing encoded data and other byte streams.
+ * This typedef exists to support platforms where uint8_t does not exist.
+ * You can regard it as equivalent on uint8_t on other platforms.
+ */
+typedef uint_least8_t pb_byte_t;
 
 /* This structure is used in auto-generated constants
  * to specify struct fields.
@@ -240,30 +246,24 @@ struct pb_field_s {
 PB_PACKED_STRUCT_END
 
 /* Make sure that the standard integer types are of the expected sizes.
- * All kinds of things may break otherwise.. atleast all fixed* types.
+ * Otherwise fixed32/fixed64 fields can break.
  *
  * If you get errors here, it probably means that your stdint.h is not
  * correct for your platform.
  */
-PB_STATIC_ASSERT(sizeof(int8_t) == 1, INT8_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint8_t) == 1, UINT8_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int16_t) == 2, INT16_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint16_t) == 2, UINT16_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int32_t) == 4, INT32_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint32_t) == 4, UINT32_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(int64_t) == 8, INT64_T_WRONG_SIZE)
-PB_STATIC_ASSERT(sizeof(uint64_t) == 8, UINT64_T_WRONG_SIZE)
+PB_STATIC_ASSERT(sizeof(int64_t) == 2 * sizeof(int32_t), INT64_T_WRONG_SIZE)
+PB_STATIC_ASSERT(sizeof(uint64_t) == 2 * sizeof(uint32_t), UINT64_T_WRONG_SIZE)
 
 /* This structure is used for 'bytes' arrays.
  * It has the number of bytes in the beginning, and after that an array.
  * Note that actual structs used will have a different length of bytes array.
  */
-#define PB_BYTES_ARRAY_T(n) struct { pb_size_t size; uint8_t bytes[n]; }
+#define PB_BYTES_ARRAY_T(n) struct { pb_size_t size; pb_byte_t bytes[n]; }
 #define PB_BYTES_ARRAY_T_ALLOCSIZE(n) ((size_t)n + offsetof(pb_bytes_array_t, bytes))
 
 struct pb_bytes_array_s {
     pb_size_t size;
-    uint8_t bytes[1];
+    pb_byte_t bytes[1];
 };
 typedef struct pb_bytes_array_s pb_bytes_array_t;
 
@@ -421,6 +421,19 @@ struct pb_extension_s {
     pb_membersize(st, m[0]), \
     pb_arraysize(st, m), ptr}
 
+#define PB_REQUIRED_INLINE(tag, st, m, fd, ltype, ptr) \
+    {tag, PB_ATYPE_STATIC | PB_HTYPE_REQUIRED | PB_LTYPE_FIXED_LENGTH_BYTES, \
+    fd, 0, pb_membersize(st, m), 0, ptr}
+
+/* Optional fields add the delta to the has_ variable. */
+#define PB_OPTIONAL_INLINE(tag, st, m, fd, ltype, ptr) \
+    {tag, PB_ATYPE_STATIC | PB_HTYPE_OPTIONAL | PB_LTYPE_FIXED_LENGTH_BYTES, \
+    fd, \
+    pb_delta(st, has_ ## m, m), \
+    pb_membersize(st, m), 0, ptr}
+
+/* INLINE does not support REPEATED fields. */
+
 /* Allocated fields carry the size of the actual data, not the pointer */
 #define PB_REQUIRED_POINTER(tag, st, m, fd, ltype, ptr) \
     {tag, PB_ATYPE_POINTER | PB_HTYPE_REQUIRED | ltype, \
@@ -460,6 +473,8 @@ struct pb_extension_s {
 #define PB_OPTEXT_POINTER(tag, st, m, fd, ltype, ptr) \
     PB_OPTIONAL_POINTER(tag, st, m, fd, ltype, ptr)
 
+/* INLINE does not support OPTEXT. */
+
 #define PB_OPTEXT_CALLBACK(tag, st, m, fd, ltype, ptr) \
     PB_OPTIONAL_CALLBACK(tag, st, m, fd, ltype, ptr)
 
@@ -491,7 +506,7 @@ struct pb_extension_s {
  *                 FLOAT, INT32, INT64, MESSAGE, SFIXED32, SFIXED64
  *                 SINT32, SINT64, STRING, UINT32, UINT64 or EXTENSION
  * - Field rules:  REQUIRED, OPTIONAL or REPEATED
- * - Allocation:   STATIC or CALLBACK
+ * - Allocation:   STATIC, INLINE, or CALLBACK
  * - Placement: FIRST or OTHER, depending on if this is the first field in structure.
  * - Message name
  * - Field name
@@ -517,9 +532,26 @@ struct pb_extension_s {
     fd, pb_delta(st, which_ ## u, u.m), \
     pb_membersize(st, u.m[0]), 0, ptr}
 
+/* INLINE does not support ONEOF. */
+
 #define PB_ONEOF_FIELD(union_name, tag, type, rules, allocation, placement, message, field, prevfield, ptr) \
-        PB_ ## rules ## _ ## allocation(union_name, tag, message, field, \
+        PB_ONEOF_ ## allocation(union_name, tag, message, field, \
         PB_DATAOFFSET_ ## placement(message, union_name.field, prevfield), \
+        PB_LTYPE_MAP_ ## type, ptr)
+
+#define PB_ANONYMOUS_ONEOF_STATIC(u, tag, st, m, fd, ltype, ptr) \
+    {tag, PB_ATYPE_STATIC | PB_HTYPE_ONEOF | ltype, \
+    fd, pb_delta(st, which_ ## u, m), \
+    pb_membersize(st, m), 0, ptr}
+
+#define PB_ANONYMOUS_ONEOF_POINTER(u, tag, st, m, fd, ltype, ptr) \
+    {tag, PB_ATYPE_POINTER | PB_HTYPE_ONEOF | ltype, \
+    fd, pb_delta(st, which_ ## u, m), \
+    pb_membersize(st, m[0]), 0, ptr}
+
+#define PB_ANONYMOUS_ONEOF_FIELD(union_name, tag, type, rules, allocation, placement, message, field, prevfield, ptr) \
+        PB_ANONYMOUS_ONEOF_ ## allocation(union_name, tag, message, field, \
+        PB_DATAOFFSET_ ## placement(message, field, prevfield), \
         PB_LTYPE_MAP_ ## type, ptr)
 
 /* These macros are used for giving out error messages.

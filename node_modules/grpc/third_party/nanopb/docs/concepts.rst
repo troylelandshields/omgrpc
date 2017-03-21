@@ -148,6 +148,7 @@ Most Protocol Buffers datatypes have directly corresponding C datatypes, such as
 
 1) Strings, bytes and repeated fields of any type map to callback functions by default.
 2) If there is a special option *(nanopb).max_size* specified in the .proto file, string maps to null-terminated char array and bytes map to a structure containing a char array and a size field.
+3) If *(nanopb).type* is set to *FT_INLINE* and *(nanopb).max_size* is also set, then bytes map to an inline byte array of fixed size.
 3) If there is a special option *(nanopb).max_count* specified on a repeated field, it maps to an array of whatever type is being repeated. Another field will be created for the actual number of entries stored.
 
 =============================================================================== =======================
@@ -160,9 +161,10 @@ repeated string name = 1 [(nanopb).max_size = 40, (nanopb).max_count = 5];      
                                                                                 | char name[5][40];
 required bytes data = 1 [(nanopb).max_size = 40];                               | typedef struct {
                                                                                 |    size_t size;
-                                                                                |    uint8_t bytes[40];
+                                                                                |    pb_byte_t bytes[40];
                                                                                 | } Person_data_t;
                                                                                 | Person_data_t data;
+required bytes data = 1 [(nanopb).max_size = 40, (nanopb.type) = FT_INLINE];    | pb_byte_t data[40];
 =============================================================================== =======================
 
 The maximum lengths are checked in runtime. If string/bytes/array exceeds the allocated length, *pb_decode* will return false.
@@ -255,6 +257,61 @@ generates this field description array for the structure *Person_PhoneNumber*::
     PB_LAST_FIELD
  };
 
+Oneof
+=====
+Protocol Buffers supports `oneof`_ sections. Here is an example of ``oneof`` usage::
+
+ message MsgType1 {
+     required int32 value = 1;
+ }
+
+ message MsgType2 {
+     required bool value = 1;
+ }
+ 
+ message MsgType3 {
+     required int32 value1 = 1;
+     required int32 value2 = 2;
+ } 
+ 
+ message MyMessage {
+     required uint32 uid = 1;
+     required uint32 pid = 2;
+     required uint32 utime = 3;
+ 
+     oneof payload {
+         MsgType1 msg1 = 4;
+         MsgType2 msg2 = 5;
+         MsgType3 msg3 = 6;
+     }
+ }
+
+Nanopb will generate ``payload`` as a C union and add an additional field ``which_payload``::
+
+  typedef struct _MyMessage {
+    uint32_t uid;
+    uint32_t pid;
+    uint32_t utime;
+    pb_size_t which_payload;
+    union {
+        MsgType1 msg1;
+        MsgType2 msg2;
+        MsgType3 msg3;
+    } payload;
+  /* @@protoc_insertion_point(struct:MyMessage) */
+  } MyMessage;
+
+``which_payload`` indicates which of the ``oneof`` fields is actually set. 
+The user is expected to set the filed manually using the correct field tag::
+
+  MyMessage msg = MyMessage_init_zero;
+  msg.payload.msg2.value = true;
+  msg.which_payload = MyMessage_msg2_tag;
+
+Notice that neither ``which_payload`` field nor the unused fileds in ``payload``
+will consume any space in the resulting encoded message.
+
+.. _`oneof`: https://developers.google.com/protocol-buffers/docs/reference/proto2-spec#oneof_and_oneof_field
 
 Extension fields
 ================

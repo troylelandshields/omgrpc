@@ -85,6 +85,7 @@
 #include <limits.h>
 #include <string.h>
 
+#include <openssl/buf.h>
 #include <openssl/bytestring.h>
 #include <openssl/err.h>
 #include <openssl/mem.h>
@@ -120,6 +121,8 @@
  *     extendedMasterSecret    [17] BOOLEAN OPTIONAL,
  *     keyExchangeInfo         [18] INTEGER OPTIONAL,
  *     certChain               [19] SEQUENCE OF Certificate OPTIONAL,
+ *     ticketFlags             [20] INTEGER OPTIONAL,
+ *     ticketAgeAdd            [21] OCTET STRING OPTIONAL,
  * }
  *
  * Note: historically this serialization has included other optional
@@ -164,22 +167,10 @@ static const int kKeyExchangeInfoTag =
     CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC | 18;
 static const int kCertChainTag =
     CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC | 19;
-
-static int add_X509(CBB *cbb, X509 *x509) {
-  int len = i2d_X509(x509, NULL);
-  if (len < 0) {
-    return 0;
-  }
-  uint8_t *buf;
-  if (!CBB_add_space(cbb, &buf, len)) {
-    OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
-    return 0;
-  }
-  if (buf != NULL && i2d_X509(x509, &buf) < 0) {
-    return 0;
-  }
-  return 1;
-}
+static const int kTicketFlagsTag =
+    CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC | 20;
+static const int kTicketAgeAddTag =
+    CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC | 21;
 
 static int SSL_SESSION_to_bytes_full(const SSL_SESSION *in, uint8_t **out_data,
                                      size_t *out_len, int for_ticket) {
@@ -229,7 +220,7 @@ static int SSL_SESSION_to_bytes_full(const SSL_SESSION *in, uint8_t **out_data,
       OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
       goto err;
     }
-    if (!add_X509(&child, in->peer)) {
+    if (!ssl_add_cert_to_cbb(&child, in->peer)) {
       goto err;
     }
   }
@@ -349,11 +340,27 @@ static int SSL_SESSION_to_bytes_full(const SSL_SESSION *in, uint8_t **out_data,
       OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
       goto err;
     }
-    size_t i;
-    for (i = 0; i < sk_X509_num(in->cert_chain); i++) {
-      if (!add_X509(&child, sk_X509_value(in->cert_chain, i))) {
+    for (size_t i = 0; i < sk_X509_num(in->cert_chain); i++) {
+      if (!ssl_add_cert_to_cbb(&child, sk_X509_value(in->cert_chain, i))) {
         goto err;
       }
+    }
+  }
+
+  if (in->ticket_flags > 0) {
+    if (!CBB_add_asn1(&session, &child, kTicketFlagsTag) ||
+        !CBB_add_asn1_uint64(&child, in->ticket_flags)) {
+      OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
+      goto err;
+    }
+  }
+
+  if (in->ticket_age_add_valid) {
+    if (!CBB_add_asn1(&session, &child, kTicketAgeAddTag) ||
+        !CBB_add_asn1(&child, &child2, CBS_ASN1_OCTETSTRING) ||
+        !CBB_add_u32(&child2, in->ticket_age_add)) {
+      OPENSSL_PUT_ERROR(SSL, ERR_R_MALLOC_FAILURE);
+      goto err;
     }
   }
 
@@ -370,6 +377,22 @@ static int SSL_SESSION_to_bytes_full(const SSL_SESSION *in, uint8_t **out_data,
 
 int SSL_SESSION_to_bytes(const SSL_SESSION *in, uint8_t **out_data,
                          size_t *out_len) {
+  if (in->not_resumable) {
+    /* If the caller has an unresumable session, e.g. if |SSL_get_session| were
+     * called on a TLS 1.3 or False Started connection, serialize with a
+     * placeholder value so it is not accidentally deserialized into a resumable
+     * one. */
+    static const char kNotResumableSession[] = "NOT RESUMABLE";
+
+    *out_len = strlen(kNotResumableSession);
+    *out_data = BUF_memdup(kNotResumableSession, *out_len);
+    if (*out_data == NULL) {
+      return 0;
+    }
+
+    return 1;
+  }
+
   return SSL_SESSION_to_bytes_full(in, out_data, out_len, 0);
 }
 
@@ -520,12 +543,6 @@ static SSL_SESSION *SSL_SESSION_parse(CBS *cbs) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_INVALID_SSL_SESSION);
     goto err;
   }
-  /* Only support SSLv3/TLS and DTLS. */
-  if ((ssl_version >> 8) != SSL3_VERSION_MAJOR &&
-      (ssl_version >> 8) != (DTLS1_VERSION >> 8)) {
-    OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_SSL_VERSION);
-    goto err;
-  }
   ret->ssl_version = ssl_version;
 
   CBS cipher;
@@ -667,6 +684,19 @@ static SSL_SESSION *SSL_SESSION_parse(CBS *cbs) {
       }
     }
   }
+
+  CBS age_add;
+  int age_add_present;
+  if (!SSL_SESSION_parse_u32(&session, &ret->ticket_flags,
+                             kTicketFlagsTag, 0) ||
+      !CBS_get_optional_asn1_octet_string(&session, &age_add, &age_add_present,
+                                          kTicketAgeAddTag) ||
+      (age_add_present &&
+       !CBS_get_u32(&age_add, &ret->ticket_age_add)) ||
+      CBS_len(&age_add) != 0) {
+    goto err;
+  }
+  ret->ticket_age_add_valid = age_add_present;
 
   if (CBS_len(&session) != 0) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_INVALID_SSL_SESSION);

@@ -14,7 +14,7 @@
 
 #include <openssl/rand.h>
 
-#if !defined(OPENSSL_WINDOWS)
+#if !defined(OPENSSL_WINDOWS) && !defined(BORINGSSL_UNSAFE_FUZZER_MODE)
 
 #include <assert.h>
 #include <errno.h>
@@ -69,7 +69,7 @@ static void init_once(void) {
   CRYPTO_STATIC_MUTEX_lock_read(&requested_lock);
   urandom_buffering = urandom_buffering_requested;
   int fd = urandom_fd_requested;
-  CRYPTO_STATIC_MUTEX_unlock(&requested_lock);
+  CRYPTO_STATIC_MUTEX_unlock_read(&requested_lock);
 
   if (fd == -2) {
     do {
@@ -96,8 +96,6 @@ static void init_once(void) {
   urandom_fd = fd;
 }
 
-void RAND_cleanup(void) {}
-
 void RAND_set_urandom_fd(int fd) {
   fd = dup(fd);
   if (fd < 0) {
@@ -106,7 +104,7 @@ void RAND_set_urandom_fd(int fd) {
 
   CRYPTO_STATIC_MUTEX_lock_write(&requested_lock);
   urandom_fd_requested = fd;
-  CRYPTO_STATIC_MUTEX_unlock(&requested_lock);
+  CRYPTO_STATIC_MUTEX_unlock_write(&requested_lock);
 
   CRYPTO_once(&once, init_once);
   if (urandom_fd != fd) {
@@ -127,7 +125,7 @@ void RAND_enable_fork_unsafe_buffering(int fd) {
   CRYPTO_STATIC_MUTEX_lock_write(&requested_lock);
   urandom_buffering_requested = 1;
   urandom_fd_requested = fd;
-  CRYPTO_STATIC_MUTEX_unlock(&requested_lock);
+  CRYPTO_STATIC_MUTEX_unlock_write(&requested_lock);
 
   CRYPTO_once(&once, init_once);
   if (urandom_buffering != 1 || (fd >= 0 && urandom_fd != fd)) {
@@ -220,4 +218,4 @@ void CRYPTO_sysrand(uint8_t *out, size_t requested) {
   }
 }
 
-#endif  /* !OPENSSL_WINDOWS */
+#endif  /* !OPENSSL_WINDOWS && !BORINGSSL_UNSAFE_FUZZER_MODE */

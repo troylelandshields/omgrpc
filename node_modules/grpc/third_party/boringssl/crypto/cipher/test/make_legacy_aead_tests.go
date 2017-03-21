@@ -60,8 +60,6 @@ func getHash(name string) (crypto.Hash, bool) {
 
 func getKeySize(name string) int {
 	switch name {
-	case "rc4":
-		return 16
 	case "aes128":
 		return 16
 	case "aes256":
@@ -126,11 +124,18 @@ type testCase struct {
 type options struct {
 	// extraPadding causes an extra block of padding to be added.
 	extraPadding bool
+	// maximalPadding causes 256 bytes of padding to be added.
+	maximalPadding bool
 	// wrongPadding causes one of the padding bytes to be wrong.
 	wrongPadding bool
+	// wrongPaddingOffset specifies the byte offset of the incorrect padding
+	// byte.
+	wrongPaddingOffset int
 	// noPadding causes padding is to be omitted. The plaintext + MAC must
 	// be a multiple of the block size.
 	noPadding bool
+	// omitMAC causes the MAC to be omitted.
+	omitMAC bool
 }
 
 func makeTestCase(length int, options options) (*testCase, error) {
@@ -185,76 +190,75 @@ func makeTestCase(length int, options options) (*testCase, error) {
 	var nonce []byte
 	var sealed []byte
 	var noSeal, fails bool
-	if *bulkCipher == "rc4" {
-		if *implicitIV {
-			return nil, fmt.Errorf("implicit IV enabled on a stream cipher")
-		}
+	block, err := newBlockCipher(*bulkCipher, encKey)
+	if err != nil {
+		return nil, err
+	}
 
-		stream, err := rc4.NewCipher(encKey)
-		if err != nil {
-			return nil, err
-		}
-
-		sealed = make([]byte, 0, len(input)+len(digest))
-		sealed = append(sealed, input...)
-		sealed = append(sealed, digest...)
-		stream.XORKeyStream(sealed, sealed)
+	iv := make([]byte, block.BlockSize())
+	rand.fillBytes(iv)
+	if *implicitIV || *ssl3 {
+		fixedIV = iv
 	} else {
-		block, err := newBlockCipher(*bulkCipher, encKey)
-		if err != nil {
-			return nil, err
-		}
+		nonce = iv
+	}
 
-		iv := make([]byte, block.BlockSize())
-		rand.fillBytes(iv)
-		if *implicitIV || *ssl3 {
-			fixedIV = iv
-		} else {
-			nonce = iv
-		}
+	cbc := cipher.NewCBCEncrypter(block, iv)
 
-		cbc := cipher.NewCBCEncrypter(block, iv)
-
-		sealed = make([]byte, 0, len(input)+len(digest)+cbc.BlockSize())
-		sealed = append(sealed, input...)
+	sealed = make([]byte, 0, len(input)+len(digest)+cbc.BlockSize())
+	sealed = append(sealed, input...)
+	if options.omitMAC {
+		noSeal = true
+		fails = true
+	} else {
 		sealed = append(sealed, digest...)
-		paddingLen := cbc.BlockSize() - (len(sealed) % cbc.BlockSize())
-		if options.noPadding {
-			if paddingLen != cbc.BlockSize() {
-				return nil, fmt.Errorf("invalid length for noPadding")
-			}
-			noSeal = true
-			fails = true
-		} else {
+	}
+	paddingLen := cbc.BlockSize() - (len(sealed) % cbc.BlockSize())
+	if options.noPadding {
+		if paddingLen != cbc.BlockSize() {
+			return nil, fmt.Errorf("invalid length for noPadding")
+		}
+		noSeal = true
+		fails = true
+	} else {
+		if options.extraPadding || options.maximalPadding {
 			if options.extraPadding {
 				paddingLen += cbc.BlockSize()
-				noSeal = true
-				if *ssl3 {
-					// SSLv3 padding must be minimal.
-					fails = true
-				}
-			}
-			if *ssl3 {
-				sealed = append(sealed, make([]byte, paddingLen-1)...)
-				sealed = append(sealed, byte(paddingLen-1))
 			} else {
-				pad := make([]byte, paddingLen)
-				for i := range pad {
-					pad[i] = byte(paddingLen - 1)
+				if paddingLen != cbc.BlockSize() {
+					return nil, fmt.Errorf("invalid length for maximalPadding")
 				}
-				sealed = append(sealed, pad...)
+				paddingLen = 256
 			}
-			if options.wrongPadding && paddingLen > 1 {
-				sealed[len(sealed)-2]++
-				noSeal = true
-				if !*ssl3 {
-					// TLS specifies the all the padding bytes.
-					fails = true
-				}
+			noSeal = true
+			if *ssl3 {
+				// SSLv3 padding must be minimal.
+				fails = true
 			}
 		}
-		cbc.CryptBlocks(sealed, sealed)
+		if *ssl3 {
+			sealed = append(sealed, make([]byte, paddingLen-1)...)
+			sealed = append(sealed, byte(paddingLen-1))
+		} else {
+			pad := make([]byte, paddingLen)
+			for i := range pad {
+				pad[i] = byte(paddingLen - 1)
+			}
+			sealed = append(sealed, pad...)
+		}
+		if options.wrongPadding {
+			if options.wrongPaddingOffset >= paddingLen {
+				return nil, fmt.Errorf("invalid wrongPaddingOffset")
+			}
+			sealed[len(sealed)-paddingLen+options.wrongPaddingOffset]++
+			noSeal = true
+			if !*ssl3 {
+				// TLS specifies the all the padding bytes.
+				fails = true
+			}
+		}
 	}
+	cbc.CryptBlocks(sealed, sealed)
 
 	key := make([]byte, 0, len(macKey)+len(encKey)+len(fixedIV))
 	key = append(key, macKey...)
@@ -290,6 +294,16 @@ func printTestCase(t *testCase) {
 	}
 }
 
+func addTestCase(length int, options options) {
+	t, err := makeTestCase(length, options)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+	printTestCase(t)
+	fmt.Printf("\n")
+}
+
 func main() {
 	flag.Parse()
 
@@ -310,48 +324,38 @@ func main() {
 	fmt.Printf("\n")
 
 	// For CBC-mode ciphers, emit tests for padding flexibility.
-	if *bulkCipher != "rc4" {
-		fmt.Printf("# Test with non-minimal padding.\n")
-		t, err := makeTestCase(5, options{extraPadding: true})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		printTestCase(t)
-		fmt.Printf("\n")
+	fmt.Printf("# Test with non-minimal padding.\n")
+	addTestCase(5, options{extraPadding: true})
 
-		fmt.Printf("# Test with bad padding values.\n")
-		t, err = makeTestCase(5, options{wrongPadding: true})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		printTestCase(t)
-		fmt.Printf("\n")
+	fmt.Printf("# Test with bad padding values.\n")
+	addTestCase(5, options{wrongPadding: true})
 
-		fmt.Printf("# Test with no padding.\n")
-		hash, ok := getHash(*mac)
-		if !ok {
-			panic("unknown hash")
-		}
-		t, err = makeTestCase(64-hash.Size(), options{noPadding: true})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		printTestCase(t)
-		fmt.Printf("\n")
+	hash, ok := getHash(*mac)
+	if !ok {
+		panic("unknown hash")
+	}
+
+	fmt.Printf("# Test with no padding.\n")
+	addTestCase(64-hash.Size(), options{noPadding: true})
+
+	fmt.Printf("# Test with maximal padding.\n")
+	addTestCase(64-hash.Size(), options{maximalPadding: true})
+
+	fmt.Printf("# Test if the unpadded input is too short for a MAC, but not publicly so.\n")
+	addTestCase(0, options{omitMAC: true, maximalPadding: true})
+
+	fmt.Printf("# Test that each byte of incorrect padding is noticed.\n")
+	for i := 0; i < 256; i++ {
+		addTestCase(64-hash.Size(), options{
+			maximalPadding:     true,
+			wrongPadding:       true,
+			wrongPaddingOffset: i,
+		})
 	}
 
 	// Generate long enough of input to cover a non-zero num_starting_blocks
 	// value in the constant-time CBC logic.
 	for l := 0; l < 500; l += 5 {
-		t, err := makeTestCase(l, options{})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
-		printTestCase(t)
-		fmt.Printf("\n")
+		addTestCase(l, options{})
 	}
 }

@@ -63,9 +63,9 @@
 #if !defined(OPENSSL_WINDOWS)
 #include <unistd.h>
 #else
-#pragma warning(push, 3)
+OPENSSL_MSVC_PRAGMA(warning(push, 3))
 #include <winsock2.h>
-#pragma warning(pop)
+OPENSSL_MSVC_PRAGMA(warning(pop))
 
 #pragma comment(lib, "Ws2_32.lib")
 #endif
@@ -110,7 +110,11 @@ static int sock_read(BIO *b, char *out, int outl) {
   }
 
   bio_clear_socket_error();
+#if defined(OPENSSL_WINDOWS)
   ret = recv(b->num, out, outl, 0);
+#else
+  ret = read(b->num, out, outl);
+#endif
   BIO_clear_retry_flags(b);
   if (ret <= 0) {
     if (bio_fd_should_retry(ret)) {
@@ -124,7 +128,11 @@ static int sock_write(BIO *b, const char *in, int inl) {
   int ret;
 
   bio_clear_socket_error();
+#if defined(OPENSSL_WINDOWS)
   ret = send(b->num, in, inl, 0);
+#else
+  ret = write(b->num, in, inl);
+#endif
   BIO_clear_retry_flags(b);
   if (ret <= 0) {
     if (bio_fd_should_retry(ret)) {
