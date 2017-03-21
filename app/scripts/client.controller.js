@@ -9,6 +9,8 @@ NewController.$inject = ['GrpcSvc', '$stateParams', '$scope'];
 function ClientController (GrpcSvc, $stateParams, $scope) {
   var vm = this;
 
+  var transformers = {};
+
   vm.connection = {
     hasConnection: false,
     addr: "127.0.0.1:9000"
@@ -20,6 +22,14 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
 
   function convertToExampleJSON(field) {
     var json = {};
+
+    if (field.type && field.type == "bytes") {
+      transformers[field.name] = function(str){
+        var buffer = new Buffer(str, 'utf8');
+        return buffer;
+      }
+      return "";
+    }
 
     if (field.type && typeof field.type != "object") { 
       return field.defaultValue;
@@ -63,6 +73,19 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
           message: err.message
         }
       } else {
+        // go through each key, if it's a Buffer then convert to stringify
+        var transform = function(obj) {
+          Object.keys(obj).forEach(function(key) {
+            if (obj[key] instanceof Buffer) {
+              obj[key] = obj[key].toString();
+            }
+            if (typeof obj[key] == "object") {
+              transform(obj[key]);
+            }
+          });
+        }
+
+        transform(reply);
         vm.result = reply;
       }
       $scope.$apply();
@@ -76,7 +99,21 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       meta.add(ma.key, ma.value)
     });
 
-    vm.client[method.name](JSON.parse(argStr), meta, displayResult);
+
+    var input = JSON.parse(argStr);
+
+    var transform = function(obj) {
+      Object.keys(obj).forEach(function(key) {
+        if (transformers[key]) {
+          obj[key] = transformers[key](obj[key]);
+        }
+
+        transform(obj[key]);
+      });
+    }
+
+    transform(input);
+    vm.client[method.name](input, meta, displayResult);
   };
 
   vm.connectStream = function(method) {

@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/weave-lab/wlib/uuid"
+
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
@@ -82,7 +84,12 @@ func (svc *Svc) SayHelloStream(srv ExampleService_SayHelloStreamServer) error {
 
 // Bytes takes bytes and returns bytes
 func (svc *Svc) Bytes(ctx context.Context, req *MessageWithBytes) (*MessageWithBytes, error) {
-	fmt.Printf("got some bytes: %s\n", string(req.Bytes))
+	id, err := uuid.New(req.Bytes)
+	if err != nil {
+		fmt.Printf("bytes are not a UUID: %s\n", string(req.Bytes))
+	} else {
+		fmt.Printf("it is a UUID: %s\n", id.String())
+	}
 
 	return req, nil
 }
