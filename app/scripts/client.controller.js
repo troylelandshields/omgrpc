@@ -1,5 +1,8 @@
 'use strict';
 
+const uuidParse = require('uuid-parse');
+const uuidValidate = require('uuid-validate');
+
 angular
   .module('app')
   .controller('ClientController', ClientController);
@@ -24,9 +27,13 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     var json = {};
 
     if (field.type && field.type == "bytes") {
-      transformers[field.name] = function(str){
-        var buffer = new Buffer(str, "utf-8");
-        return buffer;
+      transformers[field.name] = function(str){ 
+        if (uuidValidate(str)) {
+          var parsedUUID = uuidParse.parse(str);
+          return new Buffer(parsedUUID);
+        }
+
+        return new Buffer(str, "base64"); 
       }
       return "";
     }
@@ -77,7 +84,16 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
         var transform = function(obj) {
           Object.keys(obj).forEach(function(key) {
             if (obj[key] instanceof Buffer) {
-              obj[key] = obj[key].toString("utf-8");
+              // try to convert to UUID. If your data was exactly 16 bytes and not a UUID, uhm... sorry :/
+              if (obj[key].byteLength == 16) {
+                var parsed = uuidParse.unparse(obj[key]);
+                if (uuidValidate(parsed)) {
+                  obj[key] = parsed;
+                  return
+                }
+              }
+
+              obj[key] = obj[key].toString("base64");
             }
             if (typeof obj[key] == "object") {
               transform(obj[key]);
@@ -104,6 +120,9 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
 
     var transform = function(obj) {
       Object.keys(obj).forEach(function(key) {
+        if (typeof obj != "object") {
+          return
+        }
         if (transformers[key]) {
           obj[key] = transformers[key](obj[key]);
         }
