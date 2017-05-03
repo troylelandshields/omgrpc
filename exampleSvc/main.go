@@ -13,24 +13,54 @@ import (
 
 	"encoding/json"
 
+	"sync"
+
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
 	svc := &Svc{}
 
-	lis, err := net.Listen("tcp", "localhost:9000")
-	if err != nil {
-		fmt.Println("Unexpected err:", err)
-		os.Exit(1)
-	}
+	var wg sync.WaitGroup
 
-	srv := grpc.NewServer()
+	// unsecure server
+	wg.Add(1)
+	go func() {
+		lis, err := net.Listen("tcp", "localhost:9000")
+		if err != nil {
+			fmt.Println("Unexpected err:", err)
+			os.Exit(1)
+		}
+		srv := grpc.NewServer()
+		RegisterExampleServiceServer(srv, svc)
+		fmt.Println("Serving example grpc service:", lis.Addr().String())
+		srv.Serve(lis)
+		wg.Done()
+	}()
 
-	RegisterExampleServiceServer(srv, svc)
+	// SSL server
+	wg.Add(1)
+	go func() {
+		lisSecure, err := net.Listen("tcp", "localhost:9001")
+		if err != nil {
+			fmt.Println("Unexpected err:", err)
+			os.Exit(1)
+		}
+		// creds := credentials.NewServerTLSFromCert(&tls.Certificate{})
+		creds, err := credentials.NewServerTLSFromFile("server.crt", "server.key")
+		if err != nil {
+			fmt.Println("Unexpected err:", err)
+			os.Exit(1)
+		}
+		srvSecure := grpc.NewServer(grpc.Creds(creds))
+		RegisterExampleServiceServer(srvSecure, svc)
+		fmt.Println("Serving example grpc service:", lisSecure.Addr().String())
+		srvSecure.Serve(lisSecure)
+		wg.Done()
+	}()
 
-	fmt.Println("Serving example grpc service:", lis.Addr().String())
-	srv.Serve(lis)
+	wg.Wait()
 
 }
 

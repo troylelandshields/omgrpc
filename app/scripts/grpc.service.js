@@ -3,6 +3,8 @@
 let grpc = require('grpc')
 const path = require('path');
 
+const fs = require('fs');
+
 angular
   .module('app')
   .service('GrpcSvc', GrpcSvc);
@@ -114,11 +116,17 @@ function GrpcSvc() {
         }
     }
 
-    function createClient(serviceID, addr) {
+    function createClient(serviceID, addr, secure) {
         var svc = getService(serviceID);
 
-        // TODO - SSL
-        var creds = grpc.credentials.createInsecure();
+        var creds;
+        // TODO get SSL to work :()
+        if (secure) {
+            var cert = fs.readFileSync('/Users/troyshields/projects/omgrpc/exampleSvc/server.crt'); 
+            creds = grpc.credentials.createSsl(cert);
+        } else {
+            creds = grpc.credentials.createInsecure();
+        }
 
         var client = new svc.client(addr, creds);
 

@@ -1,7 +1,9 @@
 <div ng-controller="ClientController as vm">
     <div>
         <input type="text" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client"></input>
-        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
+        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr, false)" ng-disabled="vm.client">Insecure</button>
+        <!-- Uncomment Secure button once I figure out how to get it work-->
+         <!--<button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr, true)" ng-disabled="vm.client">Secure</button>-->
     </div>
 
     <div>

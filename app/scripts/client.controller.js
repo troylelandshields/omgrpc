@@ -49,8 +49,8 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     return json;
   }
 
-  vm.connectClient = function(addr) {
-    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr);
+  vm.connectClient = function(addr, secure) {
+    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, secure);
     vm.connection.hasConnection = true;
 
     vm.setMethod(vm.client.methods[0])
