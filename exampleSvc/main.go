@@ -88,16 +88,18 @@ func (svc *Svc) SayHelloStream(srv ExampleService_SayHelloStreamServer) error {
 func (svc *Svc) Bytes(ctx context.Context, req *MessageWithBytes) (*MessageWithBytes, error) {
 	fmt.Printf("bytes came in %s\n", string(req.Bytes))
 
-	id, err := uuid.New(req.Bytes)
-	if err == nil {
-		fmt.Printf("it is a UUID: %s\n", id.String())
-		return &MessageWithBytes{
-			Bytes: id.Bytes(),
-		}, nil
+	if len(req.Bytes) == 16 {
+		id, err := uuid.New(req.Bytes)
+		if err == nil {
+			fmt.Printf("it is a UUID: %s\n", id.String())
+			return &MessageWithBytes{
+				Bytes: id.Bytes(),
+			}, nil
+		}
 	}
 
 	var x interface{}
-	err = json.Unmarshal(req.Bytes, &x)
+	err := json.Unmarshal(req.Bytes, &x)
 	if err == nil {
 		fmt.Printf("it is JSON: %+v\n", x)
 		return &MessageWithBytes{
