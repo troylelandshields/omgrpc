@@ -83,6 +83,10 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
         // go through each key, if it's a Buffer then convert to stringify
         var transform = function(obj) {
           Object.keys(obj).forEach(function(key) {
+            if (!obj[key]) {
+              return
+            }
+            
             if (obj[key] instanceof Buffer) {
               // try to convert to UUID. If your data was exactly 16 bytes and not a UUID, uhm... sorry :/
               if (obj[key].byteLength == 16) {
