@@ -90,6 +90,19 @@ function GrpcSvc() {
     }
 
     function parseResolvedType(grpcType) {
+        if (grpcType.className == "Enum") {
+            return {
+                name: grpcType.name,
+                enumerations: grpcType.children.map(function(c){
+                    return {
+                        value: c.id,
+                        name: c.name
+                    };
+                }),
+                type: "enum"
+            }
+        }
+
         if (!grpcType._fields) {
             return grpcType.name
         }
@@ -101,6 +114,8 @@ function GrpcSvc() {
             } else {
                 t = f.type.name;
             }
+
+            // TODO handle enum types here so we can display them better
             return {
                 name: f.name,
                 type: t,

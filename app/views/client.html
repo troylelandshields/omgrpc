@@ -49,8 +49,8 @@
 
                 <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
                     <h4>Input</h4>
-                    <div class="col-md-12" ng-show="vm.json" ng-click="vm.toggleInput()">
-                        <button type="button" class="btn btn-default">Try Experimental Form</button>
+                    <div class="col-md-12" ng-show="vm.json">
+                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
                         <textarea class="grpc-input" placeholder="argument (JSON)" ng-model="vm.argStr">
                         </textarea>
                     </div>

@@ -41,7 +41,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       return "";
     }
 
-    if (field.type && typeof field.type != "object") { 
+    if (field.type && (field.type.type == "enum" || typeof field.type != "object")) { 
       return field.defaultValue;
     }
     
@@ -181,8 +181,27 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       }
     }
 
+    if (field.type && field.type.type == "enum") {
+      
+      return {
+        fieldName: field.name,
+        fieldType: "enum",
+        values: field.type.enumerations.map(function(v){
+          return {
+            display: v.name,
+            value: v.value
+          }
+        })
+      }
+    }
+    
+    var n = field.name;
+    if (!n) {
+      n = field.type.typeName;
+    }
+
     var fieldSchema = {
-      fieldName: field.type.typeName,
+      fieldName: n,
       fieldType: "object",
       typeName: field.type.typeName,
       repeated: field.repeated,
@@ -211,72 +230,12 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       viewifier.Load(model);
     } else {
       vm.json = true;
+      var current = document.getElementById("viewify-container");
+      while (current.firstChild) {
+          current.removeChild(current.firstChild);
+      }
 
-      vm.argStr = JSON.stringify(viewifier.Model());
+      vm.argStr = JSON.stringify(viewifier.Model(), null, 2);
     }
   }
-
 }
-
-
-// var data = {
-//       "fieldName":"input",
-//       "fieldType": "object",
-//       "typeName": "type1",
-//       "repeated": false,
-//       "fieldDef": [
-//         {
-//           "fieldName": "field1",
-//           "fieldType": "string",
-//           "repeated": true
-//         },
-//         {
-//           "fieldName": "fieldA",
-//           "fieldType": "object",
-//           "typeName": "type2",
-//           "repeated": true,
-//           "fieldDef": [
-//             {
-//               "fieldName": "subfieldA",
-//               "fieldType": "int"
-//             }, {
-//               "fieldName": "repeated-enum",
-//               "fieldType": "enum",
-//               "repeated": true,
-//               "values": [{
-//                 "display": "Error",
-//                 "value": 0
-//               }, {
-//                 "display": "OK",
-//                 "value": 1
-//               }]
-//             }
-//           ]
-//         },
-//         {
-//           "fieldName": "field2",
-//           "fieldType": "object",
-//           "typeName": "type3",
-//           "repeated": false,
-//           "fieldDef": [
-//             {
-//               "fieldName": "subfield1",
-//               "fieldType": "int"
-//             }, {
-//               "fieldName": "subfield2",
-//               "fieldType": "enum",
-//               "values": [{
-//                 "display": "v1",
-//                 "value": 0
-//               }, {
-//                 "display": "v2",
-//                 "value": 1
-//               }]
-//             }, {
-//               "fieldName": "arrayField",
-//               "fieldType": "string",
-//               "repeated": true
-//             }
-//           ]
-//         }
-//     ]};
