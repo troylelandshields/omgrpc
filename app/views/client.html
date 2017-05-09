@@ -49,9 +49,15 @@
 
                 <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
                     <h4>Input</h4>
-                    <div class="col-md-12">
+                    <div class="col-md-12" ng-show="vm.json" ng-click="vm.toggleInput()">
+                        <button type="button" class="btn btn-default">Try Experimental Form</button>
                         <textarea class="grpc-input" placeholder="argument (JSON)" ng-model="vm.argStr">
                         </textarea>
+                    </div>
+                    <div class="col-md-12" ng-show="!vm.json">
+                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
+                        <div id="viewify-container">
+                        </div>
                     </div>
                 </div>
 
