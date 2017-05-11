@@ -28,6 +28,7 @@
     "jquery": "^2.1.4",
     "ngdropzone": "^2.0.1",
     "path": "^0.12.7",
+    "pouchdb": "^6.2.0",
     "uuid-parse": "^1.0.0",
     "uuid-validate": "0.0.2",
     "viewify": "1.0.3"
