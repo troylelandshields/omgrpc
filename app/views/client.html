@@ -51,12 +51,12 @@
                     <h4>Input</h4>
                     <div class="col-md-12" ng-show="vm.json">
                         <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
-                        <textarea class="grpc-input" placeholder="argument (JSON)" ng-model="vm.argStr">
+                        <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.argStr">
                         </textarea>
                     </div>
                     <div class="col-md-12" ng-show="!vm.json">
                         <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
-                        <div id="viewify-container">
+                        <div id="viewify-container" class="padding-top">
                         </div>
                     </div>
                 </div>
