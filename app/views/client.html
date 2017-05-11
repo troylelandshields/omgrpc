@@ -49,22 +49,28 @@
 
                 <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
                     <h4>Input</h4>
-                    <div class="col-md-12">
-                        <textarea class="grpc-input" placeholder="argument (JSON)" ng-model="vm.argStr">
+                    <div class="col-md-12" ng-show="vm.json">
+                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
+                        <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.argStr">
                         </textarea>
+                    </div>
+                    <div class="col-md-12" ng-show="!vm.json">
+                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
+                        <div id="viewify-container" class="padding-top">
+                        </div>
                     </div>
                 </div>
 
                 <div class="row padding-top pull-right" ng-if="!vm.selectedMethod.isStream">
                     <div>
-                        <button type="button" class="btn btn-primary" ng-click="vm.execute(vm.selectedMethod, vm.argStr)">Send</button>
+                        <button type="button" class="btn btn-primary" ng-click="vm.execute(vm.selectedMethod)">Send</button>
                     </div>
                 </div>
 
                 <div class="row padding-top pull-right" ng-if="vm.selectedMethod.isStream">
                     <div>
                         <div ng-if="vm.stream.isConnected">
-                            <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream, vm.argStr)">Send Message</button>
+                            <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream)">Send Message</button>
                         </div>
                         <div ng-if="vm.stream.isConnected" class="padding-top-sm">
                             <button type="button" class="btn btn-warning" ng-click="vm.closeStream(vm.stream)">Close</button>

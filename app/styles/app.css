@@ -66,3 +66,7 @@ pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
 .key { color: red; }
 
 
+td {
+  padding: 3px;
+}
+

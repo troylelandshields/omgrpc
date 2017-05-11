@@ -9,9 +9,9 @@ angular
   .module('app')
   .service('GrpcSvc', GrpcSvc);
 
-GrpcSvc.$inject = [];
+GrpcSvc.$inject = ['StorageSvc'];
 
-function GrpcSvc() {
+function GrpcSvc(StorageSvc) {
     var state = {
         protos: [],
         servicesByServiceID: {}
@@ -74,13 +74,20 @@ function GrpcSvc() {
         return parsed
     }
 
-    function parseProtofile(protoFile) {
+    function parseProtofile(protoFile, skipSave) {
+        console.log("protofile", protoFile);
         let parsed = findRoot(path.dirname(protoFile.path), protoFile.name, protoFile.path.split(path.sep).length);
 
         parsed.services = parseServices(parsed)
-        parsed.id = parsed.$$hashKey;
+        parsed.id = protoFile.name;
+        state.protos.push(parsed);
 
-        state.protos.push(parsed)
+        if (!skipSave) {
+            StorageSvc.saveRecentProto({
+                path: protoFile.path,
+                name: protoFile.name,
+            });
+        }
 
         return parsed
     }
@@ -90,6 +97,19 @@ function GrpcSvc() {
     }
 
     function parseResolvedType(grpcType) {
+        if (grpcType.className == "Enum") {
+            return {
+                name: grpcType.name,
+                enumerations: grpcType.children.map(function(c){
+                    return {
+                        value: c.id,
+                        name: c.name
+                    };
+                }),
+                type: "enum"
+            }
+        }
+
         if (!grpcType._fields) {
             return grpcType.name
         }
@@ -101,6 +121,8 @@ function GrpcSvc() {
             } else {
                 t = f.type.name;
             }
+
+            // TODO handle enum types here so we can display them better
             return {
                 name: f.name,
                 type: t,
@@ -172,6 +194,19 @@ function GrpcSvc() {
     }
 
     // parseProtofile({path:"/Users/troyshields/projects/omgrpc/exampleSvc/example.proto", name:"example.proto"})
+
+    // StorageSvc.loadRecentProtos(function(recent){
+    //     if (!recent) {
+    //         return;
+    //     }
+
+    //     recent.forEach(function(recentFile){
+    //         if (!recentFile) {
+    //             return
+    //         }
+    //         parseProtofile(recentFile, true);
+    //     })
+    // });
 
     return {
         parseProtofile: parseProtofile,

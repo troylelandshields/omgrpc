@@ -10,9 +10,15 @@ service ExampleService {
   rpc Bytes(MessageWithBytes) returns (MessageWithBytes) {}
 }
 
+enum GreetingType {
+  Salutation = 0;
+  Farewell = 1;
+}
+
 message SayRequest {
   string sayWhat = 1;
   Recipient recipient = 2;
+  GreetingType GreetingType = 3;
 }
 
 message Recipient {

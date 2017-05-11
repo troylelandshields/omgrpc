@@ -7,9 +7,9 @@ angular
   .module('app')
   .controller('ClientController', ClientController);
 
-NewController.$inject = ['GrpcSvc', '$stateParams', '$scope'];
+NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc'];
 
-function ClientController (GrpcSvc, $stateParams, $scope) {
+function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
   var vm = this;
 
   var transformers = {};
@@ -22,6 +22,9 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
   vm.result = null;
   vm.argStr = "{}";
   vm.metadataArgs = [];
+  vm.json = true;
+
+  var viewifier;
 
   function convertToExampleJSON(field) {
     var json = {};
@@ -38,7 +41,7 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       return "";
     }
 
-    if (field.type && typeof field.type != "object") { 
+    if (field.type && (field.type.type == "enum" || typeof field.type != "object")) { 
       return field.defaultValue;
     }
     
@@ -83,6 +86,10 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
         // go through each key, if it's a Buffer then convert to stringify
         var transform = function(obj) {
           Object.keys(obj).forEach(function(key) {
+            if (!obj[key]) {
+              return
+            }
+            
             if (obj[key] instanceof Buffer) {
               // try to convert to UUID. If your data was exactly 16 bytes and not a UUID, uhm... sorry :/
               if (obj[key].byteLength == 16) {
@@ -107,7 +114,8 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       $scope.$apply();
   }
 
-  vm.execute = function(method, argStr) {
+  vm.execute = function(method) {
+    
     vm.result = null;
     var meta = new grpc.Metadata();
 
@@ -116,7 +124,12 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     });
 
 
-    var input = JSON.parse(argStr);
+    var input;
+    if (vm.json) {
+      input = JSON.parse(argStr);
+    } else {
+      input = viewifier.Model();
+    }
 
     var transform = function(obj) {
       Object.keys(obj).forEach(function(key) {
@@ -162,5 +175,95 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     vm.stream.isConnected = false;
   }
 
+  function schemaFromProto(field) {
+
+    // gonna treat bytes as string until viewify supports files
+    if (field.type && field.type == "bytes") {
+      return {
+        fieldName: field.name,
+        fieldType: "string",
+        repeated: field.repeated
+      }
+    }
+
+    if (field.type && typeof field.type != "object") {
+      return {
+        fieldName: field.name,
+        fieldType: field.type,
+        repeated: field.repeated
+      }
+    }
+
+    // if (field.type && field.type.typeName == "UUID") {
+    //   return {
+    //     fieldName: field.name,
+    //     fieldType: "object",
+    //     typeName: field.type.typeName,
+    //     repeated: field.repeated,
+    //     fieldDef: [{
+    //       fieldName: field.name,
+    //       fieldType: "string",
+    //     }]
+    //   }
+    // }
+
+
+
+    if (field.type && field.type.type == "enum") {
+      return {
+        fieldName: field.name,
+        fieldType: "enum",
+        values: field.type.enumerations.map(function(v){
+          return {
+            display: v.name,
+            value: v.value
+          }
+        })
+      }
+    }
+    
+    var n = field.name;
+    if (!n) {
+      n = field.type.typeName;
+    }
+
+    var fieldSchema = {
+      fieldName: n,
+      fieldType: "object",
+      typeName: field.type.typeName,
+      repeated: field.repeated,
+      fieldDef: []
+    } 
+
+    field.type.fields.forEach(function(childField){
+      fieldSchema.fieldDef.push(schemaFromProto(childField)); 
+    });
+
+    return fieldSchema;
+  }
+
+  var viewifier;
+
+  vm.toggleInput = function() {
+    if (vm.json) {
+      vm.json = false;
+
+      var schema = schemaFromProto(vm.selectedMethod.requestType);
+      
+      viewifier = new Viewifier(schema);
+      viewifier.show("viewify-container");
+
+      var model = JSON.parse(vm.argStr);
+      viewifier.Load(model);
+    } else {
+      vm.json = true;
+      var current = document.getElementById("viewify-container");
+      while (current.firstChild) {
+          current.removeChild(current.firstChild);
+      }
+
+      vm.argStr = JSON.stringify(viewifier.Model(), null, 2);
+    }
+  }
 
 }
