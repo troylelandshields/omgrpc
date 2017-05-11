@@ -181,6 +181,20 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       }
     }
 
+    if (field.type && field.type.typeName == "UUID") {
+      return {
+        fieldName: field.name,
+        fieldType: "object",
+        typeName: field.type.typeName,
+        repeated: field.repeated,
+        fieldDef: [{
+          fieldName: field.name,
+          fieldType: "string",
+        }]
+      }
+      
+    }
+
     if (field.type && field.type.type == "enum") {
       
       return {
