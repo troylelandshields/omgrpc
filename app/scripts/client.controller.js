@@ -114,7 +114,8 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       $scope.$apply();
   }
 
-  vm.execute = function(method, argStr) {
+  vm.execute = function(method) {
+    
     vm.result = null;
     var meta = new grpc.Metadata();
 
@@ -123,7 +124,12 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     });
 
 
-    var input = JSON.parse(argStr);
+    var input;
+    if (vm.json) {
+      input = JSON.parse(argStr);
+    } else {
+      input = viewifier.Model();
+    }
 
     var transform = function(obj) {
       Object.keys(obj).forEach(function(key) {
