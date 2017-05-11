@@ -7,9 +7,9 @@ angular
   .module('app')
   .controller('ClientController', ClientController);
 
-NewController.$inject = ['GrpcSvc', '$stateParams', '$scope'];
+NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc'];
 
-function ClientController (GrpcSvc, $stateParams, $scope) {
+function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
   var vm = this;
 
   var transformers = {};
@@ -175,8 +175,6 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
     vm.stream.isConnected = false;
   }
 
-
-
   function schemaFromProto(field) {
 
     // gonna treat bytes as string until viewify supports files
@@ -267,4 +265,5 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       vm.argStr = JSON.stringify(viewifier.Model(), null, 2);
     }
   }
+
 }
