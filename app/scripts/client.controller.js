@@ -173,6 +173,15 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
 
   function schemaFromProto(field) {
 
+    // gonna treat bytes as string until viewify supports files
+    if (field.type && field.type == "bytes") {
+      return {
+        fieldName: field.name,
+        fieldType: "string",
+        repeated: field.repeated
+      }
+    }
+
     if (field.type && typeof field.type != "object") {
       return {
         fieldName: field.name,
@@ -181,22 +190,22 @@ function ClientController (GrpcSvc, $stateParams, $scope) {
       }
     }
 
-    if (field.type && field.type.typeName == "UUID") {
-      return {
-        fieldName: field.name,
-        fieldType: "object",
-        typeName: field.type.typeName,
-        repeated: field.repeated,
-        fieldDef: [{
-          fieldName: field.name,
-          fieldType: "string",
-        }]
-      }
-      
-    }
+    // if (field.type && field.type.typeName == "UUID") {
+    //   return {
+    //     fieldName: field.name,
+    //     fieldType: "object",
+    //     typeName: field.type.typeName,
+    //     repeated: field.repeated,
+    //     fieldDef: [{
+    //       fieldName: field.name,
+    //       fieldType: "string",
+    //     }]
+    //   }
+    // }
+
+
 
     if (field.type && field.type.type == "enum") {
-      
       return {
         fieldName: field.name,
         fieldType: "enum",
