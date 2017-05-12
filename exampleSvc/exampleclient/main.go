@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -34,4 +35,11 @@ func main() {
 	}
 
 	fmt.Println("resp:", resp.SaidWhat)
+
+	_, err = client.ReturnsUnimplementedCode(context.Background(), &SayRequest{})
+	if err != nil {
+		status, _ := status.FromError(err)
+		fmt.Printf("ReturnsUnimplementedCode returned code %d with message %s", status.Code(), status.Message())
+	}
+
 }

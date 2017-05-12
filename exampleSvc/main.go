@@ -16,7 +16,9 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -141,6 +143,10 @@ func (svc *Svc) Bytes(ctx context.Context, req *MessageWithBytes) (*MessageWithB
 	return &MessageWithBytes{
 		Bytes: req.Bytes,
 	}, nil
+}
+
+func (svc *Svc) ReturnsUnimplementedCode(ctx context.Context, req *SayRequest) (*SayReply, error) {
+	return nil, status.Error(codes.Unimplemented, "this endpoint is not implemented")
 }
 
 //go:generate protoc -I=./ -I=$GOPATH/src --go_out=plugins=grpc:. example.proto
