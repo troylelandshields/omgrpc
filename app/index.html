@@ -33,6 +33,9 @@
                         <div ng-repeat="proto in vm.protos">
                             <div class="padding-top-sm" ng-repeat="svc in proto.services">
                                 <button type="button" class="btn btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
+                                <button type="button" class="btn btn-danger btn-xs">
+                                    <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
+                                </button>
                             </div>
                         </div>
                     </div>

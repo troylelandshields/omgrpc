@@ -10,4 +10,8 @@ function NavController (GrpcSvc)
 {
     var vm = this;
     vm.protos = GrpcSvc.getProtos()
+
+    vm.removeProto = function(proto) {
+      GrpcSvc.removeProto(proto);
+    }
 }

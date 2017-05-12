@@ -126,7 +126,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
     var input;
     if (vm.json) {
-      input = JSON.parse(argStr);
+      input = JSON.parse(vm.argStr);
     } else {
       input = viewifier.Model();
     }
@@ -165,9 +165,17 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     });
   };
 
-  vm.sendStream = function(stream, argStr) {
+  vm.sendStream = function(stream) {
     vm.result = null;
-    stream.write(JSON.parse(argStr));
+
+    var input;
+    if (vm.json) {
+      input = JSON.parse(vm.argStr);
+    } else {
+      input = viewifier.Model();
+    }
+
+    stream.write(input);
   };
 
   vm.closeStream = function(stream) {

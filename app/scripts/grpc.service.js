@@ -193,26 +193,17 @@ function GrpcSvc(StorageSvc) {
         return client;
     }
 
-    // parseProtofile({path:"/Users/troyshields/projects/omgrpc/exampleSvc/example.proto", name:"example.proto"})
-
-    // StorageSvc.loadRecentProtos(function(recent){
-    //     if (!recent) {
-    //         return;
-    //     }
-
-    //     recent.forEach(function(recentFile){
-    //         if (!recentFile) {
-    //             return
-    //         }
-    //         parseProtofile(recentFile, true);
-    //     })
-    // });
-
     return {
         parseProtofile: parseProtofile,
         // getGrpcClient: getGrpcClient
         getProtos: function() {
             return state.protos
+        },
+        removeProto: function(proto) {
+            var index = state.protos.indexOf(proto);
+            state.protos.splice(index, 1)
+
+            StorageSvc.removeRecentProto(proto.id);
         },
 
         getService: getService,

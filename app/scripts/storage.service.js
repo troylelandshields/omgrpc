@@ -29,6 +29,16 @@ function StorageSvc() {
         });
     }
 
+    function removeRecentProto(protoFileName) {
+        recentProtosDB.get(protoFileName).then(function(doc) {
+            return recentProtosDB.remove(doc);
+        }).then(function (result) {
+            console.log("removed recent protofile");
+        }).catch(function (err) {
+            console.log(err);
+        });
+    }
+
     function loadRecentProtos(cb) {
         recentProtosDB.allDocs({
             include_docs: true,
@@ -44,6 +54,7 @@ function StorageSvc() {
 
     return {
         saveRecentProto: saveRecentProto,
+        removeRecentProto: removeRecentProto,
         loadRecentProtos: loadRecentProtos
     }
 }
