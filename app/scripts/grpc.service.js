@@ -150,7 +150,10 @@ function GrpcSvc(StorageSvc) {
             creds = grpc.credentials.createInsecure();
         }
 
-        var client = new svc.client(addr, creds);
+        var client = new svc.client(addr, creds, {
+            'grpc.min_reconnect_backoff_ms': 1000,
+            'grpc.max_reconnect_backoff_ms': 1000,
+        });
 
         client.methods = [];
 
