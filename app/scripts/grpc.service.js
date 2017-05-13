@@ -164,29 +164,32 @@ function GrpcSvc(StorageSvc) {
             }
         }
 
-        svc.client.service.children.forEach(function(child){
-            if (child.className==="Service.RPCMethod") {
-                // check if it's a streaming endpoint and do something different if it is? this whole mess needs to be cleaned up
+        Object.keys(svc.client.service).forEach(function(k){
+            // check if it's a streaming endpoint and do something different if it is? this whole mess needs to be cleaned up
+            var child = svc.client.service[k] 
 
-                var m = methodCache[child.name.toLowerCase()]
-
-                if (!m) {
-                    console.log("Couldn't find method on client", child.name)
-                    return
-                }
-
-                m.requestType = {};
-                m.responseType = {};
-
-                m.requestType.type = parseResolvedType(child.resolvedRequestType);
-                m.responseType.type = parseResolvedType(child.resolvedResponseType);
-
-                m.requestStream = child.requestStream;
-                m.responseStream = child.responseStream;
-                m.isStream = m.requestStream || m.responseStream;
-
-                client.methods.push(m);
+            if (!child.originalName) {
+                return
             }
+
+            var m = methodCache[child.originalName.toLowerCase()]
+
+            if (!m) {
+                console.log("Couldn't find method on client", child.name)
+                return
+            }
+
+            m.requestType = {};
+            m.responseType = {};
+
+            m.requestType.type = parseResolvedType(child.requestType);
+            m.responseType.type = parseResolvedType(child.responseType);
+
+            m.requestStream = child.requestStream;
+            m.responseStream = child.responseStream;
+            m.isStream = m.requestStream || m.responseStream;
+
+            client.methods.push(m);
         });
 
 
