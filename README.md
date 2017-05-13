@@ -16,13 +16,13 @@ In order to run omgRPC from source, execute the following steps from the repo's 
 
 * Install [Node JS](https://nodejs.org/en/download/).
 * Update Node's package manager [NPM](https://docs.npmjs.com/getting-started/installing-node)
-* Install [nw](https://github.com/nwjs/npm-installer) (<- Real link), which is an installer for NW.js (NodeWebkit).
+* Install [nw](https://github.com/nwjs/npm-installer), which is an installer for NW.js (NodeWebkit).
 * Install nw.js 0.22.3-sdk by running `nw install 0.22.3-sdk`
 * Install project dependencies by running `npm install`
 * Most annoying step of all, rebuild the node gRPC dependency for your platform by running something like `npm rebuild grpc --build-from-source --runtime=node-webkit --target=0.22.3 --target_arch=x64`
 * Run omgRPC by running `nw .`
 
-To be able to run the repo's example gRPC service--which is fully optional--you must have [Go](https://golang.org/) installed, along with all of the example's required dependencies. If you need help with this, let me know. This miniature Go project is a little different than your average Go project because it might not be in your normal GOPATH.
+To be able to run the repo's example gRPC service (which is fully optional) you must have [Go](https://golang.org/) installed, along with all of the example's required dependencies. If you need help with this, let me know. This miniature Go project is a little different than your average Go project because it might not be in your normal GOPATH.
 
 ## Frameworks and Organization
 
