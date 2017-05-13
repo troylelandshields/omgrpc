@@ -22,14 +22,20 @@ path = {
 
 // Node dependencies modules copy task
 // ignores developer dependencies
-gulp.task('nodeDeps', function() {
-  var res = [];
-  for(var i in p.dependencies) {
-    res.push(nodeDeps+i+'/**/*.*');
-  }
+// gulp.task('nodeDeps', function() {
+//   var res = [];
+//   for(var i in p.dependencies) {
+//     res.push(nodeDeps+i+'/**/*.*');
+//   }
 
-  return gulp.src(res, { base: nodeDeps })
-    .pipe(gulp.dest(path.output.nodeDeps));
+//   return gulp.src(res, { base: nodeDeps })
+//     .pipe(gulp.dest(path.output.nodeDeps));
+// });
+
+
+gulp.task('nodeDeps', function() {
+  return gulp.src(nodeDeps+"/**")
+    .pipe(gulp.dest(build+nodeDeps));
 });
 
 // copy package.json to dist
