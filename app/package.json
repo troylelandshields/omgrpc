@@ -1,9 +1,0 @@
-{
-  "name": "omgrpc",
-  "version": "1.0.0",
-  "main": "index.html",
-  "window": {
-    "frame": true,
-    "toolbar": true
-  }
-}

@@ -13,7 +13,7 @@ var appDependencies = [
 angular
   .module('app', appDependencies)
   .config(appConfig)
-  .constant('config', require('../config.json'));
+  .constant('config', require('./config.json'));
 
 appConfig.$inject = ['$stateProvider', '$urlRouterProvider'];
 

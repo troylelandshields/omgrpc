@@ -33,5 +33,8 @@
     "uuid-parse": "^1.0.0",
     "uuid-validate": "0.0.2",
     "viewify": "1.0.3"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
   }
 }

@@ -12,7 +12,7 @@ Please consider contributing, I will try to make it as easy as possible. This st
 
 ## Setting Up
 
-In order to run omgRPC from source, execute the following steps from the repo's root:
+In order to run omgRPC from source, execute the following steps from the root directory:
 
 * Install [Node JS](https://nodejs.org/en/download/).
 * Update Node's package manager [NPM](https://docs.npmjs.com/getting-started/installing-node)
@@ -38,7 +38,7 @@ There is an example gRPC service (written in Go) that can be used (and altered) 
 
 I am sure there is a better way to do this (and one that will utilize minification better). 
 
-For now I am just using a tool called [nwjs-builder](https://www.npmjs.com/package/nwjs-builder). I just copy and paste the `app`, `node_modules`, `config.json`, and `package.json` into a folder called `build` and then run this command: `nwb nwbuild -v 0.22.3-sdk -p osx64 ./build/`. It drops the built resources into a folder called `omgrpc-osx-x64`.
+For now I am just using a tool called [nwjs-builder](https://www.npmjs.com/package/nwjs-builder). You can run `./build.sh`, which runs a gulp file that mostly just copies everything it needs into a `build` folder, then runs this command: `nwb nwbuild -v 0.22.3-sdk -p osx64,win64,linux64 ./build/ -o dist`. It drops the built resources into a folder called `dist`.
 
 #### Some Miscellaneous Notes
 * Import statements in the proto file need to be relative to the proto file from some shared root path.
