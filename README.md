@@ -14,8 +14,8 @@ Please consider contributing, I will try to make it as easy as possible. This st
 
 In order to run omgRPC from source, execute the following steps from the repo's root:
 
-* Install [Node JS](http://lmgtfy.com/?s=b&q=install+nodejs).
-* Install Node's package manager [NPM](http://lmgtfy.com/?s=b&q=install+npm)
+* Install [Node JS](https://nodejs.org/en/download/).
+* Update Node's package manager [NPM](https://docs.npmjs.com/getting-started/installing-node)
 * Install [nw](https://github.com/nwjs/npm-installer) (<- Real link), which is an installer for NW.js (NodeWebkit).
 * Install nw.js 0.22.3-sdk by running `nw install 0.22.3-sdk`
 * Install project dependencies by running `npm install`
