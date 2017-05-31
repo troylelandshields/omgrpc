@@ -1,9 +1,15 @@
 <div ng-controller="ClientController as vm">
     <div>
+        <div>
+            <div class="checkbox"><label><input type="checkbox" ng-model="vm.connection.secure" ng-disabled="vm.client"/> Secure? </label>
+            <label class="btn btn-default" for="my-file-selector" ng-hide="!vm.connection.secure" ng-disabled="vm.client">
+                <input id="my-file-selector" type="file" style="display:none;" onchange="angular.element(this).scope().setCert(this)" ng-disabled="vm.client">
+                Browse for cert...
+            </label>
+            <span class='label label-info' id="upload-file-info"></span>
+         <div>
         <input type="text" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client"></input>
-        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr, false)" ng-disabled="vm.client">Insecure</button>
-        <!-- Uncomment Secure button once I figure out how to get it work-->
-         <!--<button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr, true)" ng-disabled="vm.client">Secure</button>-->
+        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
     </div>
 
     <div>

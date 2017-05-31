@@ -138,22 +138,25 @@ function GrpcSvc(StorageSvc) {
         }
     }
 
-    function createClient(serviceID, addr, secure) {
+    function createClient(serviceID, addr, secure, cert) {
         var svc = getService(serviceID);
+
+        var options = {
+            'grpc.min_reconnect_backoff_ms': 1000,
+            'grpc.max_reconnect_backoff_ms': 1000,
+        };
 
         var creds;
         // TODO get SSL to work :()
         if (secure) {
-            var cert = fs.readFileSync('/Users/troyshields/projects/omgrpc/exampleSvc/server.crt'); 
+            var cert = fs.readFileSync(cert); 
             creds = grpc.credentials.createSsl(cert);
+            options['grpc.ssl_target_name_override'] = "*"
         } else {
             creds = grpc.credentials.createInsecure();
         }
 
-        var client = new svc.client(addr, creds, {
-            'grpc.min_reconnect_backoff_ms': 1000,
-            'grpc.max_reconnect_backoff_ms': 1000,
-        });
+        var client = new svc.client(addr, creds, options);
 
         client.methods = [];
 
