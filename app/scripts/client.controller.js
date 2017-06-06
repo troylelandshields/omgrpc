@@ -53,7 +53,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
   }
 
   vm.connectClient = function(addr, secure) {
-    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, secure);
+    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, vm.connection.secure, vm.connection.cert);
     vm.connection.hasConnection = true;
 
     vm.setMethod(vm.client.methods[0])
@@ -272,6 +272,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
       vm.argStr = JSON.stringify(viewifier.Model(), null, 2);
     }
+  }
+
+  $scope.setCert = function(element) {
+    var filename = element.value
+    vm.connection.cert = filename
+
+    $('#upload-file-info').html(filename);
   }
 
 }
