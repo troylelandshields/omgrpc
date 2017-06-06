@@ -138,7 +138,7 @@ function GrpcSvc(StorageSvc) {
         }
     }
 
-    function createClient(serviceID, addr, secure, cert) {
+    function createClient(serviceID, addr, secure, cert, targetnameoverride) {
         var svc = getService(serviceID);
 
         var options = {
@@ -151,7 +151,10 @@ function GrpcSvc(StorageSvc) {
         if (secure) {
             var cert = fs.readFileSync(cert); 
             creds = grpc.credentials.createSsl(cert);
-            options['grpc.ssl_target_name_override'] = "*"
+
+            if (targetnameoverride != "") {
+                options['grpc.ssl_target_name_override'] = targetnameoverride
+            }
         } else {
             creds = grpc.credentials.createInsecure();
         }
