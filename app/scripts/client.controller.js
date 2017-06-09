@@ -16,7 +16,8 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
   vm.connection = {
     hasConnection: false,
-    addr: "127.0.0.1:9000"
+    addr: "127.0.0.1:9000",
+    targetnameoveride: ""
   };
 
   vm.result = null;
