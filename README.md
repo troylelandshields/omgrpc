@@ -19,6 +19,8 @@ In order to run omgRPC from source, execute the following steps from the root di
 * Install [nwjs](https://www.npmjs.com/package/nwjs), which is an installer for NW.js (NodeWebkit): `npm install -g nwjs`.
 * Install nw.js 0.22.3-sdk by running `nw install 0.22.3-sdk`
 * Install project dependencies by running `npm install`
+* Install `npm install -g node-pre-gyp`
+* Install `npm install -g nw-gyp`
 * Most annoying step of all, rebuild the node gRPC dependency for your platform by running something like `npm rebuild grpc --build-from-source --runtime=node-webkit --target=0.22.3 --target_arch=x64 --target_platform=darwin` (set target\_arch and target\_platform to whatever you are building for. See [here](https://github.com/mapbox/node-pre-gyp))
 * Run omgRPC by running `nw .`
 
