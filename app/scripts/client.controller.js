@@ -16,7 +16,8 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
   vm.connection = {
     hasConnection: false,
-    addr: "127.0.0.1:9000"
+    addr: "127.0.0.1:9000",
+    targetnameoveride: ""
   };
 
   vm.result = null;
@@ -53,7 +54,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
   }
 
   vm.connectClient = function(addr, secure) {
-    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, vm.connection.secure, vm.connection.cert);
+    vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, vm.connection.secure, vm.connection.cert, vm.connection.targetnameoveride);
     vm.connection.hasConnection = true;
 
     vm.setMethod(vm.client.methods[0])

@@ -1,20 +1,34 @@
 <div ng-controller="ClientController as vm">
-    <div>
-        <div>
-            <div class="checkbox"><label><input type="checkbox" ng-model="vm.connection.secure" ng-disabled="vm.client"/> Secure? </label>
-            <label class="btn btn-default" for="my-file-selector" ng-hide="!vm.connection.secure" ng-disabled="vm.client">
-                <input id="my-file-selector" type="file" style="display:none;" onchange="angular.element(this).scope().setCert(this)" ng-disabled="vm.client">
-                Browse for cert...
-            </label>
-            <span class='label label-info' id="upload-file-info"></span>
-         <div>
-        <input type="text" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client"></input>
-        <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
-    </div>
+    <form class="form-inline col-sm-12">
+        <div class="col-sm-3">
+            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client">
+        </div>
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
+        </div>
+        <div class="col-sm-6">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="vm.connection.secure"> Secure?
+                </label>
+            </div>
+            <div  ng-hide="!vm.connection.secure">
+                <div >
+                    <label class="btn btn-default" for="my-file-selector">
+                         <input id="my-file-selector" type="file" style="display:none;" onchange="angular.element(this).scope().setCert(this)" /> Browse for cert
+                    </label>
+                    <span class='label label-info' id="upload-file-info"></span>
+                </div>
+                <label  for="targetoveride">Target Name Override</label>
+                <input  type="text" class="form-control" id="targetoveride" placeholder="optional" ng-model="vm.connection.targetnameoveride"/>
+            </div>
+        </div>
+    </form>
 
     <div>
         <ul class="nav nav-tabs">
-            <li ng-repeat="method in vm.client.methods" role="presentation" ng-class="vm.selectedMethod.name === method.name ? 'active' : vm.selectedMethod" ng-click="vm.setMethod(method)"><a>{{method.name}}</a></li>
+            <li ng-repeat="method in vm.client.methods" role="presentation" ng-class="vm.selectedMethod.name === method.name ? 'active' : vm.selectedMethod"
+                ng-click="vm.setMethod(method)"><a>{{method.name}}</a></li>
         </ul>
 
         <div ng-show="vm.selectedMethod" class="panel panel-default">
@@ -44,57 +58,57 @@
                                 <button type="button" class="btn btn-success btn-xs" ng-click="vm.addMetadata()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>  Add Metadata</button>
                             </div>
                         </div>
-                    <div>
-                </div>
-
-                <div class="row padding-top-sm" ng-if="vm.selectedMethod.isStream">
-                    <div ng-if="!vm.stream.isConnected">
-                        <button type="button" class="btn btn-info" ng-click="vm.connectStream(vm.selectedMethod)">Connect</button>
-                    </div>
-                </div>
-
-                <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
-                    <h4>Input</h4>
-                    <div class="col-md-12" ng-show="vm.json">
-                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
-                        <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.argStr">
-                        </textarea>
-                    </div>
-                    <div class="col-md-12" ng-show="!vm.json">
-                        <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
-                        <div id="viewify-container" class="padding-top">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row padding-top pull-right" ng-if="!vm.selectedMethod.isStream">
-                    <div>
-                        <button type="button" class="btn btn-primary" ng-click="vm.execute(vm.selectedMethod)">Send</button>
-                    </div>
-                </div>
-
-                <div class="row padding-top pull-right" ng-if="vm.selectedMethod.isStream">
-                    <div>
-                        <div ng-if="vm.stream.isConnected">
-                            <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream)">Send Message</button>
-                        </div>
-                        <div ng-if="vm.stream.isConnected" class="padding-top-sm">
-                            <button type="button" class="btn btn-warning" ng-click="vm.closeStream(vm.stream)">Close</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
-                    <div class="col-md-10">
-                        <h4 ng-if="vm.result != null">Response</h4>
                         <div>
-                            <div ng-if="vm.result != null">
-                                <pre ng-bind-html="vm.result | prettify"></pre>
+                        </div>
+
+                        <div class="row padding-top-sm" ng-if="vm.selectedMethod.isStream">
+                            <div ng-if="!vm.stream.isConnected">
+                                <button type="button" class="btn btn-info" ng-click="vm.connectStream(vm.selectedMethod)">Connect</button>
+                            </div>
+                        </div>
+
+                        <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
+                            <h4>Input</h4>
+                            <div class="col-md-12" ng-show="vm.json">
+                                <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
+                                <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.argStr">
+                        </textarea>
+                            </div>
+                            <div class="col-md-12" ng-show="!vm.json">
+                                <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
+                                <div id="viewify-container" class="padding-top">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row padding-top pull-right" ng-if="!vm.selectedMethod.isStream">
+                            <div>
+                                <button type="button" class="btn btn-primary" ng-click="vm.execute(vm.selectedMethod)">Send</button>
+                            </div>
+                        </div>
+
+                        <div class="row padding-top pull-right" ng-if="vm.selectedMethod.isStream">
+                            <div>
+                                <div ng-if="vm.stream.isConnected">
+                                    <button type="button" class="btn btn-info" ng-click="vm.sendStream(vm.stream)">Send Message</button>
+                                </div>
+                                <div ng-if="vm.stream.isConnected" class="padding-top-sm">
+                                    <button type="button" class="btn btn-warning" ng-click="vm.closeStream(vm.stream)">Close</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
+                            <div class="col-md-10">
+                                <h4 ng-if="vm.result != null">Response</h4>
+                                <div>
+                                    <div ng-if="vm.result != null">
+                                        <pre ng-bind-html="vm.result | prettify"></pre>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
