@@ -45,8 +45,6 @@ function appConfig ($stateProvider, $urlRouterProvider) {
   $urlRouterProvider.otherwise("/");
 }
 
-
-
 angular
   .module('app')
   .filter('prettify', function () {
