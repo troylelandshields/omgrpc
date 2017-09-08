@@ -1,10 +1,11 @@
 <div ng-controller="ClientController as vm">
     <form class="form-inline col-sm-12">
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client">
         </div>
         <div class="col-sm-2">
-            <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-disabled="vm.client">Connect</button>
+            <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-hide="vm.client">Connect</button>
+            <button type="button" class="btn btn-default" ng-click="vm.disconnectClient()" ng-show="vm.client">Disconnect</button>
         </div>
         <div class="col-sm-6">
             <div class="checkbox">
@@ -70,14 +71,24 @@
                         <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
                             <h4>Input</h4>
                             <div class="col-md-12" ng-show="vm.json">
-                                <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
-                                <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.argStr">
+                                <row>
+                                    <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Try Experimental Form</button>
+                                    <button type="button" class="btn btn-default" ng-click="vm.setMethod(vm.selectedMethod, true)">Reset Input</button>
+                                </row>
+                                <row>
+                                    <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.selectedMethod.arg.argStr">
+                                </row>
                         </textarea>
                             </div>
                             <div class="col-md-12" ng-show="!vm.json">
-                                <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
-                                <div id="viewify-container" class="padding-top">
-                                </div>
+                                <row>
+                                    <button type="button" class="btn btn-default" ng-click="vm.toggleInput()">Back to JSON Input</button>
+                                    <button type="button" class="btn btn-default" ng-click="vm.setMethod(vm.selectedMethod, true)">Reset Input</button>
+                                </row>
+                                <row>
+                                    <div id="viewify-container" class="padding-top">
+                                    </div>
+                                </row>
                             </div>
                         </div>
 

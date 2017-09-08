@@ -21,7 +21,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
   };
 
   vm.result = null;
-  vm.argStr = "{}";
+  vm.args = [];
   vm.metadataArgs = [];
   vm.json = true;
 
@@ -53,17 +53,42 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     return json;
   }
 
-  vm.connectClient = function(addr, secure) {
+  vm.connectClient = function(addr) {
     vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, vm.connection.secure, vm.connection.cert, vm.connection.targetnameoveride);
     vm.connection.hasConnection = true;
 
     vm.setMethod(vm.client.methods[0])
   };
 
-  vm.setMethod = function(method) {
-    vm.selectedMethod = method;
+  vm.disconnectClient = function() {
+    vm.client = null;
+    vm.connection = {
+      hasConnection: false,
+      addr: "127.0.0.1:9000",
+      targetnameoveride: ""
+    };
+    
+    vm.selectedMethod = null;
+  };
 
-    vm.argStr = JSON.stringify(convertToExampleJSON(method.requestType), undefined, 2);
+  vm.setMethod = function(method, reset) {
+    if (!vm.json) {
+      vm.toggleInput();
+    }
+
+    vm.selectedMethod = method;
+ 
+    if (!vm.selectedMethod.arg || reset){
+      vm.selectedMethod.arg = {
+        argStr: "{}",
+        edited: false
+      }
+    }
+
+    if (!vm.selectedMethod.arg.edited) {
+      vm.selectedMethod.arg.argStr = JSON.stringify(convertToExampleJSON(method.requestType), undefined, 2);
+    }
+
   };
 
   vm.addMetadata = function() {
@@ -127,7 +152,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
     var input;
     if (vm.json) {
-      input = JSON.parse(vm.argStr);
+      input = JSON.parse(vm.selectedMethod.arg.argStr);
     } else {
       input = viewifier.Model();
     }
@@ -171,7 +196,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
     var input;
     if (vm.json) {
-      input = JSON.parse(vm.argStr);
+      input = JSON.parse(vm.selectedMethod.arg.argStr);
     } else {
       input = viewifier.Model();
     }
@@ -262,7 +287,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
       viewifier = new Viewifier(schema);
       viewifier.show("viewify-container");
 
-      var model = JSON.parse(vm.argStr);
+      var model = JSON.parse(vm.selectedMethod.arg.argStr);
       viewifier.Load(model);
     } else {
       vm.json = true;
@@ -271,7 +296,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
           current.removeChild(current.firstChild);
       }
 
-      vm.argStr = JSON.stringify(viewifier.Model(), null, 2);
+      vm.selectedMethod.arg.argStr = JSON.stringify(viewifier.Model(), null, 2);
     }
   }
 
