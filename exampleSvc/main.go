@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
 
@@ -36,6 +37,9 @@ func main() {
 		}
 		srv := grpc.NewServer()
 		RegisterExampleServiceServer(srv, svc)
+
+		reflection.Register(srv)
+
 		fmt.Println("Serving example grpc service:", lis.Addr().String())
 		srv.Serve(lis)
 		wg.Done()
@@ -57,6 +61,9 @@ func main() {
 		}
 		srvSecure := grpc.NewServer(grpc.Creds(creds))
 		RegisterExampleServiceServer(srvSecure, svc)
+
+		reflection.Register(srvSecure)
+
 		fmt.Println("Serving example grpc service:", lisSecure.Addr().String())
 		srvSecure.Serve(lisSecure)
 		wg.Done()

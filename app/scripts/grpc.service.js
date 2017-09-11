@@ -28,20 +28,25 @@ function GrpcSvc(StorageSvc) {
                 return proto[pkgName];
             })
             .forEach(function(pkg){
-                Object.keys(pkg)
+                let s = Object.keys(pkg)
                     .filter(function(key){
                         return pkg[key].service
-                    })
-                    .forEach(function(key){
+                    });
+
+                if (s.length === 0) {
+                    parseServices(pkg).forEach(function(svc){
+                        services.push(svc);
+                    });
+                } else {
+                    s.forEach(function(key){
                         var svc = {
                             id: key,
                             name: key,
                             client: pkg[key]
                         }
                         services.push(svc);
-
-                        state.servicesByServiceID[key] = svc;
                     });
+                }
             });
 
         return services;
@@ -79,6 +84,17 @@ function GrpcSvc(StorageSvc) {
         let parsed = findRoot(path.dirname(protoFile.path), protoFile.name, protoFile.path.split(path.sep).length);
 
         parsed.services = parseServices(parsed)
+
+        if (parsed.services.length === 0) {
+            console.log("did not get any services from proto file");
+            return
+        }
+
+        parsed.services.forEach(function(svc) {    
+            state.servicesByServiceID[svc.id] = svc;
+        });
+
+
         parsed.id = protoFile.name;
         state.protos.push(parsed);
 
