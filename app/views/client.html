@@ -1,18 +1,22 @@
 <div ng-controller="ClientController as vm">
+
     <form class="form-inline col-sm-12">
         <div class="col-sm-4">
-            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="vm.client">
+            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="(vm.client)">
         </div>
         <div class="col-sm-2">
             <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-hide="vm.client">Connect</button>
             <button type="button" class="btn btn-default" ng-click="vm.disconnectClient()" ng-show="vm.client">Disconnect</button>
         </div>
-        <div class="col-sm-6">
+
+        <div class="col-sm-5">
+
             <div class="checkbox">
                 <label>
                     <input type="checkbox" ng-model="vm.connection.secure"> Secure?
                 </label>
             </div>
+
             <div  ng-hide="!vm.connection.secure">
                 <div >
                     <label class="btn btn-default" for="my-file-selector">
@@ -76,9 +80,11 @@
                                     <button type="button" class="btn btn-default" ng-click="vm.setMethod(vm.selectedMethod, true)">Reset Input</button>
                                 </row>
                                 <row>
-                                    <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.selectedMethod.arg.argStr">
+                                    <textarea class="grpc-input padding-top" placeholder="argument (JSON)" ng-model="vm.selectedMethod.arg.argStr
+                                    ">
+                                    </textarea>
                                 </row>
-                        </textarea>
+                        
                             </div>
                             <div class="col-md-12" ng-show="!vm.json">
                                 <row>
@@ -123,3 +129,11 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div ng-controller="DropdownCtrl" ng-hide="!kubectlExists()" style="padding-left:30px;">
+    <img src="/app/styles/kubernetes-logo.svg" style="width:15px;margin-top:-2px;padding-top:-5px;">
+
+    Cluster: <select ng-change="change(this)" data-ng-options="o.name for o in options" data-ng-model="selectedOption"></select>
+</div>
