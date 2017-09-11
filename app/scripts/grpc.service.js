@@ -144,6 +144,7 @@ function GrpcSvc(StorageSvc) {
         var options = {
             'grpc.min_reconnect_backoff_ms': 1000,
             'grpc.max_reconnect_backoff_ms': 1000,
+            'grpc.keepalive_time_ms': 15000
         };
 
         var creds;

@@ -53,11 +53,29 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     return json;
   }
 
-  vm.connectClient = function(addr) {
+  vm.connectClient = async function(addr) {
+    
+    var server;
+    await kubernetes.resolvable(addr).then(result => {
+      server = result;
+    }, error =>{
+      console.log(error);
+    });
+
+    if (!server) {
+      alert('applying', server);
+      $scope.$apply();
+      return;
+    }
+
+    addr = server;
+    console.log("Setting up grpc client: " + addr);
     vm.client = GrpcSvc.createClient($stateParams.serviceID, addr, vm.connection.secure, vm.connection.cert, vm.connection.targetnameoveride);
     vm.connection.hasConnection = true;
+    vm.setMethod(vm.client.methods[0]);
 
-    vm.setMethod(vm.client.methods[0])
+    $scope.$apply();
+
   };
 
   vm.disconnectClient = function() {
@@ -101,6 +119,12 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
       vm.metadataArgs.splice(index, 1);
     }
   }
+
+  vm.kubernetesCapable = kubernetes.kubectlExists
+
+  vm.kubernetesSettings = function() {
+    alert('here');
+  } 
 
   function displayResult(err, reply) {
       if (err) {
@@ -306,5 +330,14 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
     $('#upload-file-info').html(filename);
   }
+
+  $scope.kubectlExists = kubernetes.kubectlExists;
+
+  $scope.kubectlContexts = kubernetes.kubectlContexts();
+  $scope.kubectlSelectedContext = $scope.kubectlContexts[0];
+
+  $scope.kubectlContextChange = function($event) {
+    kubernetes.setContext($scope.kubectlSelectedContext.name);
+  };
 
 }
