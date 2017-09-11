@@ -2,7 +2,7 @@
 
     <form class="form-inline col-sm-12">
         <div class="col-sm-4">
-            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:6565" ng-disabled="(vm.client)">
+            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:9000" ng-disabled="(vm.client)">
         </div>
         <div class="col-sm-2">
             <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-hide="vm.client">Connect</button>
@@ -130,10 +130,12 @@
             </div>
         </div>
     </div>
-</div>
 
-<div ng-controller="DropdownCtrl" ng-hide="!kubectlExists()" style="padding-left:30px;">
-    <img src="/app/styles/kubernetes-logo.svg" style="width:15px;margin-top:-2px;padding-top:-5px;">
 
-    Cluster: <select ng-change="change(this)" data-ng-options="o.name for o in options" data-ng-model="selectedOption"></select>
+    <div ng-hide="!kubectlExists()" style="padding-left:30px;" ng-hide="vm.client">
+        <img src="/app/styles/kubernetes-logo.svg" style="width:15px;margin-top:-2px;padding-top:-5px;">
+
+        Cluster: <select class="form-control" style="width:50%;display:inline-block;" ng-change="kubectlContextChange(this)" data-ng-options="o.name for o in kubectlContexts" data-ng-model="kubectlSelectedContext" ng-disabled="(vm.client)"></select>
+
+    </div>
 </div>

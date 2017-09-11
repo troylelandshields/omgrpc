@@ -331,4 +331,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     $('#upload-file-info').html(filename);
   }
 
+  $scope.kubectlExists = kubernetes.kubectlExists;
+
+  $scope.kubectlContexts = kubernetes.kubectlContexts();
+  $scope.kubectlSelectedContext = $scope.kubectlContexts[0];
+
+  $scope.kubectlContextChange = function($event) {
+    kubernetes.setContext($scope.kubectlSelectedContext.name);
+  };
+
 }

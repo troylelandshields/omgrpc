@@ -10,7 +10,7 @@ const spawn = require('child_process').spawn;
 	5. if service exists, get service endpoints
 	6. decide if we should use nodeport or port forward (use data from 4)
 	7. if node port, lookup port in service (use data from 4)
-	8. if port forward, load endpoints
+	8. if port forward, load pods matching selector
 	9. setup kubectl port-forward
 	10. do request (edited)
 */
@@ -32,7 +32,10 @@ var kubernetes = {
 
 		try {
 			var args = ['help'];
-			execFileSync('kubectl', args);
+			var opts = {
+				timeout: 1000,
+			};
+			execFileSync('kubectl', args, opts);
 		} catch(err) {
 			this.kubectlExistsCached = false;
 		}
@@ -48,8 +51,11 @@ var kubernetes = {
 		}
 
 		try {
+			var opts = {
+				timeout: 1000,
+			};
 			var args = ['config', 'current-context'];
-			result = execFileSync('kubectl', args);
+			result = execFileSync('kubectl', args, opts);
 		} catch(err) {
 			console.log(err);
 			return [];
@@ -65,8 +71,11 @@ var kubernetes = {
 		}
 
 		try {
+			var opts = {
+				timeout: 1000,
+			};
 			var args = ['config', 'get-contexts', '-o=name'];
-			result = execFileSync('kubectl', args);
+			result = execFileSync('kubectl', args, opts);
 		} catch(err) {
 			console.log(err);
 			return [];
@@ -242,7 +251,10 @@ var kubernetes = {
 
 		var j;
 		try {
-			var result = execFileSync('kubectl', args);
+			var opts = {
+				timeout: 1000,
+			};
+			var result = execFileSync('kubectl', args, opts);
 			j = String.fromCharCode.apply(String, result);
 
 		} catch(err) {
@@ -315,7 +327,10 @@ var kubernetes = {
 
 		var j;
 		try {
-			var result = execFileSync('kubectl', args);
+			var opts = {
+				timeout: 1000,
+			};
+			var result = execFileSync('kubectl', args, opts);
 			j = String.fromCharCode.apply(String, result);
 
 		} catch(err) {
@@ -437,25 +452,16 @@ angular
 NewController.$inject = ['$scope'];
 
 function DropdownCtrl ($scope) {
-  var vm = this;
 
   $scope.kubectlExists = kubernetes.kubectlExists;
 
   $scope.options = kubernetes.kubectlContexts();
   $scope.selectedOption = $scope.options[0];
 
-  $scope.toggled = function(open) {
-  };
-
-  $scope.toggleDropdown = function($event) {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-    $scope.status.isopen = !$scope.status.isopen;
-  };
-
   $scope.change = function($event) {
   	kubernetes.setContext($scope.selectedOption.name);
   };
+
+  $scope.grpcConnection = false;
 
 }
