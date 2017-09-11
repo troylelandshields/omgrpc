@@ -60,10 +60,11 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
       server = result;
     }, error =>{
       console.log(error);
+      return
     });
 
     if (!server) {
-      alert('applying', server);
+      alert("error: could not resolve hostname")
       $scope.$apply();
       return;
     }
