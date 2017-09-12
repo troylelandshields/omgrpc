@@ -128,7 +128,7 @@ var kubernetes = {
 		this.kubectlContext = context;
 	},
 
-	resolvable: function(addr) {
+	resolvable: function(addr, done) {
 
 		var parts = addr.split(':');
 		if (parts.length < 2) {
@@ -167,7 +167,7 @@ var kubernetes = {
 					if (target.type == 'Pod') {
 						console.log('setting up port forward');
 
-						this.portForward(context, target.namespace, target.pod, target.port).then(forward => {
+						this.portForward(context, target.namespace, target.pod, target.port, done).then(forward => {
 						
 							console.log(`done setting up [${forward}]`);
 							resolve(forward.address);
@@ -365,7 +365,7 @@ var kubernetes = {
 
 	},
 
-	portForward: async function(context, namespace, pod, port) {
+	portForward: async function(context, namespace, pod, port, done) {
 		
 		var args = [
 			"port-forward",
@@ -416,6 +416,7 @@ var kubernetes = {
 			});
 
 			k.on('close', (code) => {
+			  done();
 			  reject(`child process exited with code ${code}`);
 			});
 

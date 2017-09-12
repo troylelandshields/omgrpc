@@ -55,8 +55,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
   vm.connectClient = async function(addr) {
     
+    let done = function() {
+        vm.disconnectClient();
+        $scope.$apply();
+    };
+
     var server;
-    await kubernetes.resolvable(addr).then(result => {
+    await kubernetes.resolvable(addr, done).then(result => {
       server = result;
     }, error =>{
       console.log(error);
