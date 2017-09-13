@@ -7,9 +7,9 @@ angular
   .module('app')
   .controller('ClientController', ClientController);
 
-NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc'];
+NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc', 'KubernetesSvc'];
 
-function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
+function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, KubernetesSvc) {
   var vm = this;
 
   var transformers = {};
@@ -61,7 +61,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     };
 
     var server;
-    await kubernetes.resolvable(addr, done).then(result => {
+    await KubernetesSvc.resolvable(addr, done).then(result => {
       server = result;
     }, error =>{
       console.log(error);
@@ -126,7 +126,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     }
   }
 
-  vm.kubernetesCapable = kubernetes.kubectlExists
+  vm.kubernetesCapable = KubernetesSvc.kubectlExists
 
   vm.kubernetesSettings = function() {
     alert('here');
@@ -341,13 +341,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     $('#upload-file-info').html(filename);
   }
 
-  $scope.kubectlExists = kubernetes.kubectlExists;
+  $scope.kubectlExists = KubernetesSvc.kubectlExists;
 
-  $scope.kubectlContexts = kubernetes.kubectlContexts();
+  $scope.kubectlContexts = KubernetesSvc.kubectlContexts();
   $scope.kubectlSelectedContext = $scope.kubectlContexts[0];
 
   $scope.kubectlContextChange = function($event) {
-    kubernetes.setContext($scope.kubectlSelectedContext.name);
+    KubernetesSvc.setContext($scope.kubectlSelectedContext.name);
   };
 
 }

@@ -1,3 +1,7 @@
+'use strict';
+
+const url = require('url');
+const dns = require('dns');
 
 const execFileSync = require('child_process').execFileSync;
 const spawn = require('child_process').spawn;
@@ -15,19 +19,24 @@ const spawn = require('child_process').spawn;
 	10. do request (edited)
 */
 
-var kubernetes = {
-	url: require('url'),
-	dns: require('dns'),
 
-	kubectlExistsCached: null,
-	kubectContext: null,
+angular
+	.module('app')
+	.service('KubernetesSvc', KubernetesSvc);
 
-	nodePortHostname: '', // TODO: this needs to be configurable (if empty, nodeports will never be used)
-	defaultNamespace: 'default', // TODO: load default namespace from kubectl config
+function KubernetesSvc() {
 
-	kubectlExists: function() {
-		if (this.kubectlExistsCached != null) {
-			return this.kubectlExistsCached;
+	let kubectlExistsCached = null;
+	let kubectContext = null;
+
+	let nodePortHostname = ''; // TODO: this needs to be configurable (if empty, nodeports will never be used)
+	let defaultNamespace = 'default'; // TODO: load default namespace from kubectl config
+
+	let kubectlContext;
+
+	let kubectlExists = function() {
+		if (kubectlExistsCached !== null) {
+			return kubectlExistsCached;
 		}
 
 		try {
@@ -37,18 +46,18 @@ var kubernetes = {
 			};
 			execFileSync('kubectl', args, opts);
 		} catch(err) {
-			this.kubectlExistsCached = false;
-			return this.kubectlExistsCached
+			kubectlExistsCached = false;
+			return kubectlExistsCached
 		}
 
-		this.kubectlExistsCached = true;
+		kubectlExistsCached = true;
 
-		return this.kubectlExistsCached;
-	},
+		return kubectlExistsCached;
+	}
 
-	kubectlCurrentContext: function() {
-		if (!this.kubectlExistsCached) {
-			return [];
+	let kubectlCurrentContext = function() {
+		if (!kubectlExists()) {
+			return null;
 		}
 
 		try {
@@ -56,18 +65,17 @@ var kubernetes = {
 				timeout: 1000,
 			};
 			var args = ['config', 'current-context'];
-			result = execFileSync('kubectl', args, opts);
+			var result = execFileSync('kubectl', args, opts);
 		} catch(err) {
 			console.log(err);
-			return [];
+			return null;
 		}
 
 		return String.fromCharCode.apply(String, result);
-	},
+	};
 
-	kubectlContexts: function() {
-
-		if (!this.kubectlExistsCached) {
+	let kubectlContexts = function() {
+		if (!kubectlExists()) {
 			return [];
 		}
 
@@ -76,7 +84,7 @@ var kubernetes = {
 				timeout: 1000,
 			};
 			var args = ['config', 'get-contexts', '-o=name'];
-			result = execFileSync('kubectl', args, opts);
+			var result = execFileSync('kubectl', args, opts);
 		} catch(err) {
 			console.log(err);
 			return [];
@@ -86,7 +94,7 @@ var kubernetes = {
 		var split = s.split('\n').sort();
 
 		var objects = [];
-		for (i in split) {
+		for (var i in split) {
 			var n = split[i];
 			if (n.length == 0) {
 				continue
@@ -98,7 +106,14 @@ var kubernetes = {
 			})
 		}
 
-		var current = this.kubectlCurrentContext().trim();
+		var current = kubectlCurrentContext();
+
+		if (!current) {
+			console.log("could not select current context")
+			return objects;
+		}
+
+		current = current.trim()
 		if (current.length > 0) {
 			objects.sort(function(x,y){ 
 				
@@ -113,23 +128,23 @@ var kubernetes = {
 			});
 		}
 
-		if (!this.kubectlContext) {
-			this.setContext(current);
+		if (!kubectlContext) {
+			setContext(current);
 		}
 
 		return objects;
-	},
+	};
 
-	context: function() {
-		return this.kubectlContext;
-	},
+	let context = function() {
+		return kubectlContext;
+	};
 
-	setContext: function(context) {
+	let setContext = function(context) {
 		console.log(`Setting context to [${context}]`);
-		this.kubectlContext = context;
-	},
+		kubectlContext = context;
+	};
 
-	resolvable: function(addr, done) {
+	let resolvable = function(addr, done) {
 
 		var parts = addr.split(':');
 		if (parts.length < 2) {
@@ -141,14 +156,14 @@ var kubernetes = {
 
 		var promise = new Promise((resolve, reject) => {
 
-			this.dns.lookup(hostname, (err, address, family) => {
+			dns.lookup(hostname, (err, address, family) => {
 				
 				if (!err && !isNaN(port)) {
 					resolve(addr);
 					return;
 				}
 
-				if (this.kubectlExists() == false) {
+				if (kubectlExists() == false) {
 					reject("kubectl not found");
 					return;
 				}
@@ -156,8 +171,8 @@ var kubernetes = {
 				// if dns does not resolve, we may be able to forward into kubernetes
 				// through a nodeport or kubectl port-forward
 				try {
-					var context = this.context();
-					var target = this.lookupTarget(context, hostname, port);
+					var context = context();
+					var target = lookupTarget(context, hostname, port);
 
 					console.log(target);
 					if (target.type == 'NodePort') {
@@ -168,7 +183,7 @@ var kubernetes = {
 					if (target.type == 'Pod') {
 						console.log('setting up port forward');
 
-						this.portForward(context, target.namespace, target.pod, target.port, done).then(forward => {
+						portForward(context, target.namespace, target.pod, target.port, done).then(forward => {
 						
 							console.log(`done setting up [${forward}]`);
 							resolve(forward.address);
@@ -194,18 +209,18 @@ var kubernetes = {
 		});
 	
 		return promise;
-	},
+	};
 
-	lookupTarget: function(context, serviceName, port) {
+	let lookupTarget = function(context, serviceName, port) {
 
 		// lookup service definition
-		var service = this.lookupService(context, serviceName, port);
+		var service = lookupService(context, serviceName, port);
 		// if there's a node port and there is a node port
 		// ingress, use it.
-		if (service.type == 'NodePort' && service.nodePort > 0 && this.nodePortHostname.length > 0) {
+		if (service.type == 'NodePort' && service.nodePort > 0 && nodePortHostname.length > 0) {
 			return {
 				type: 'NodePort',
-				hostname: this.nodePortHostname,
+				hostname: nodePortHostname,
 				port: service.nodePort
 			};
 		}
@@ -215,7 +230,7 @@ var kubernetes = {
 			throw 'no pod selectors found';
 		}
 
-		pods = this.lookupPods(context, service.namespace, service.selector, service.targetPort);
+		pods = lookupPods(context, service.namespace, service.selector, service.targetPort);
 		if (pods.length == 0) {
 			throw 'no pods found that match selector';
 		}
@@ -227,9 +242,9 @@ var kubernetes = {
 			port: pods[0].containerPort
 		};
 
-	},
+	};
 
-	lookupPods: function(context, namespace, selectors, port) {
+	let lookupPods = function(context, namespace, selectors, port) {
 
 		var selector;
 		var i = 0;
@@ -298,15 +313,15 @@ var kubernetes = {
 
 		return podPorts;
 
-	},
+	};
 
-	lookupService: function(context, serviceDNSName, port) {
+	let lookupService = function(context, serviceDNSName, port) {
 		// split the serviceName apart. 
 		// Assume first part is service name
 		// second is the namespace
 		// ignore anything that follows
 
-		var namespace = this.defaultNamespace;
+		var namespace = defaultNamespace;
 
 		var parts = serviceDNSName.split(".");
 		if (parts.length == 0) {
@@ -363,9 +378,9 @@ var kubernetes = {
 		}
 
 		throw "port not found";
-	},
+	};
 
-	portForward: async function(context, namespace, pod, port, done) {
+	let portForward = async function(context, namespace, pod, port, done) {
 		
 		var args = [
 			"port-forward",
@@ -443,16 +458,23 @@ var kubernetes = {
 		});
 
 		return r;
-	}
+	};
+
+	return {
+		kubectlExists: kubectlExists,
+		kubectlContexts: kubectlContexts,
+		setContext: setContext,
+		resolvable: resolvable,
+	};
 }
 
 angular
 	.module('app')
 	.controller('DropdownCtrl', DropdownCtrl);
 
-NewController.$inject = ['$scope'];
+DropdownCtrl.$inject = ['$scope', 'KubernetesSvc'];
 
-function DropdownCtrl ($scope) {
+function DropdownCtrl ($scope, KubernetesSvc) {
 
   $scope.kubectlExists = kubernetes.kubectlExists;
 
