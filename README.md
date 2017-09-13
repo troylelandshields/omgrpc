@@ -6,7 +6,7 @@ The goal is for it to be easy to use. Just open your `.proto` file and specify t
 
 ![omgRPC Example](http://shldz.us/omgrpc/omgrpc.gif "omgRPC Example")
 
-#### Kubernetes support
+# Kubernetes support
 
 Version v0.2.0 and later can automatically setup a port-forward for connecting to services inside of Kubernetes. If kubectl exists in your path, a dropdown will appear allowing you to choose which kubectl config to use, with the current kubectl config selected by default. You can then use the {servicename}.{namespace}:{port|port name} as the server address and omgRPC will figure out how a destination pod to setup a port forward.
 
