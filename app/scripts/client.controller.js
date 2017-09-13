@@ -234,6 +234,10 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     vm.stream.isConnected = false;
   }
 
+  vm.toggleTooltip = function() {
+    vm.showTooltip = !vm.showTooltip;
+  }
+
   function schemaFromProto(field) {
 
     // gonna treat bytes as string until viewify supports files

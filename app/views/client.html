@@ -1,34 +1,60 @@
 <div ng-controller="ClientController as vm">
 
-    <form class="form-inline col-sm-12">
-        <div class="col-sm-4">
-            <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:9000" ng-disabled="(vm.client)">
-        </div>
-        <div class="col-sm-2">
-            <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-hide="vm.client">Connect</button>
-            <button type="button" class="btn btn-default" ng-click="vm.disconnectClient()" ng-show="vm.client">Disconnect</button>
-        </div>
-
-        <div class="col-sm-6">
-
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" ng-model="vm.connection.secure"> Secure?
-                </label>
+    <div ng-hide="!kubectlExists()" class="row" style="padding-left:30px;" ng-hide="vm.client">
+        <div class="row">
+            <div class="col-sm-10" data-toggle="tooltip" title="Some text">
+                <img src="/app/styles/kubernetes-logo.svg" style="width:15px;margin-top:-2px;padding-top:-5px;">
+                
+                Cluster: <select class="form-control" style="width:50%;display:inline-block;" ng-change="kubectlContextChange(this)" data-ng-options="o.name for o in kubectlContexts" data-ng-model="kubectlSelectedContext" ng-disabled="(vm.client)"></select>
             </div>
+            <a class="col-sm-1" ng-show="!vm.showTooltip" ng-click="vm.toggleTooltip()">
+                <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+            </a>
+        </div>
+        <div class="row" ng-show="vm.showTooltip">
+            <div class="alert alert-info col-sm-12 padding-top" role="alert">
+                <button type="button" class="close" aria-label="Close"><span aria-hidden="true" ng-click="vm.toggleTooltip()">&times;</span></button>
+                <strong>Wow you're lucky!</strong> We noticed you have kubectl installed, so if you're trying to hit a gRPC server running in Kubernetes 
+                just select your desired context and type the service you want to connect to and omgRPC will automatically set up a proxy for you.
+                For example, you can type myservice.mynamespace:portname, so cool!
+            </div>
+        </div>
+    </div>
 
-            <div  ng-hide="!vm.connection.secure">
-                <div >
-                    <label class="btn btn-default" for="my-file-selector">
-                         <input id="my-file-selector" type="file" style="display:none;" onchange="angular.element(this).scope().setCert(this)" /> Browse for cert
-                    </label>
-                    <span class='label label-info' id="upload-file-info"></span>
+
+    <div class="row padding-top">
+        <form class="form-inline col-sm-12 ">
+            <div class="row">
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" ng-model="vm.connection.addr" placeholder="127.0.0.1:9000" ng-disabled="(vm.client)">
                 </div>
-                <label  for="targetoveride">Target Name Override</label>
-                <input  type="text" class="form-control" id="targetoveride" placeholder="optional" ng-model="vm.connection.targetnameoveride"/>
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-default" ng-click="vm.connectClient(vm.connection.addr)" ng-hide="vm.client">Connect</button>
+                    <button type="button" class="btn btn-default" ng-click="vm.disconnectClient()" ng-show="vm.client">Disconnect</button>
+                </div>
+
+                <div class="col-sm-6">
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" ng-model="vm.connection.secure"> Secure?
+                        </label>
+                    </div>
+
+                    <div  ng-hide="!vm.connection.secure">
+                        <div >
+                            <label class="btn btn-default" for="my-file-selector">
+                                <input id="my-file-selector" type="file" style="display:none;" onchange="angular.element(this).scope().setCert(this)" /> Browse for cert
+                            </label>
+                            <span class='label label-info' id="upload-file-info"></span>
+                        </div>
+                        <label  for="targetoveride">Target Name Override</label>
+                        <input  type="text" class="form-control" id="targetoveride" placeholder="optional" ng-model="vm.connection.targetnameoveride"/>
+                    </div>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 
     <div>
         <ul class="nav nav-tabs">
@@ -132,10 +158,4 @@
     </div>
 
 
-    <div ng-hide="!kubectlExists()" style="padding-left:30px;" ng-hide="vm.client">
-        <img src="/app/styles/kubernetes-logo.svg" style="width:15px;margin-top:-2px;padding-top:-5px;">
-
-        Cluster: <select class="form-control" style="width:50%;display:inline-block;" ng-change="kubectlContextChange(this)" data-ng-options="o.name for o in kubectlContexts" data-ng-model="kubectlSelectedContext" ng-disabled="(vm.client)"></select>
-
-    </div>
 </div>

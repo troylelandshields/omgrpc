@@ -38,6 +38,7 @@ var kubernetes = {
 			execFileSync('kubectl', args, opts);
 		} catch(err) {
 			this.kubectlExistsCached = false;
+			return this.kubectlExistsCached
 		}
 
 		this.kubectlExistsCached = true;
