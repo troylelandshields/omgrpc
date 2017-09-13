@@ -1,8 +1,8 @@
 'use strict';
 
 let grpc = require('grpc')
-const path = require('path');
 
+const path = require('path');
 const fs = require('fs');
 
 angular
@@ -53,15 +53,22 @@ function GrpcSvc(StorageSvc) {
     }
 
     function findRoot(root, relPath, attempts) {
+
         var parsed
         try {
             var file = {
                 root: root,
                 file: relPath
             };
-            
+
+            // check if file exists
+            if (!fs.existsSync(path.join(root, relPath))) {
+               throw('file does not exist');
+            }
+
             parsed = grpc.load(file);
         } catch (e) {
+
             if (attempts > 0) {
                 let newRoot = path.dirname(root);
                 let newRelPath = path.join(root, relPath).replace(newRoot, "");
