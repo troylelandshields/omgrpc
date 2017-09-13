@@ -135,7 +135,7 @@ function KubernetesSvc() {
 		return objects;
 	};
 
-	let context = function() {
+	let getContext = function() {
 		return kubectlContext;
 	};
 
@@ -171,8 +171,8 @@ function KubernetesSvc() {
 				// if dns does not resolve, we may be able to forward into kubernetes
 				// through a nodeport or kubectl port-forward
 				try {
-					var context = context();
-					var target = lookupTarget(context, hostname, port);
+					let context = getContext();
+					let target = lookupTarget(context, hostname, port);
 
 					console.log(target);
 					if (target.type == 'NodePort') {
@@ -230,7 +230,7 @@ function KubernetesSvc() {
 			throw 'no pod selectors found';
 		}
 
-		pods = lookupPods(context, service.namespace, service.selector, service.targetPort);
+		let pods = lookupPods(context, service.namespace, service.selector, service.targetPort);
 		if (pods.length == 0) {
 			throw 'no pods found that match selector';
 		}
@@ -410,6 +410,11 @@ function KubernetesSvc() {
 			  	var l = split[i];
 			  	var r = new RegExp(/Forwarding from ([\[\]0-9a-fA-F:\.]+):([0-9]+)/g);
 			  	var matches = r.exec(l);
+
+				if (!matches) {
+					reject("could not parse into hostname and port")
+					return
+				}
 
 			  	if (matches.length == 3) {
 				  var d = {
