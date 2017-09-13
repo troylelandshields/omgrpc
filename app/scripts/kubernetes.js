@@ -47,7 +47,7 @@ var kubernetes = {
 	},
 
 	kubectlCurrentContext: function() {
-		if (this.kubectlExistsCached != null) {
+		if (!this.kubectlExistsCached) {
 			return [];
 		}
 
@@ -67,7 +67,7 @@ var kubernetes = {
 
 	kubectlContexts: function() {
 
-		if (this.kubectlExistsCached != null) {
+		if (!this.kubectlExistsCached) {
 			return [];
 		}
 
@@ -363,7 +363,6 @@ var kubernetes = {
 		}
 
 		throw "port not found";
-
 	},
 
 	portForward: async function(context, namespace, pod, port, done) {
