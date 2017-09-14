@@ -21,11 +21,11 @@ In order to run omgRPC from source, execute the following steps from the root di
 * Install [Node JS](https://nodejs.org/en/download/).
 * Update Node's package manager [NPM](https://docs.npmjs.com/getting-started/installing-node)
 * Install [nwjs](https://www.npmjs.com/package/nwjs), which is an installer for NW.js (NodeWebkit): `npm install -g nwjs`.
-* Install nw.js 0.22.3-sdk by running `nw install 0.22.3-sdk`
+* Install nw.js 0.22.3-sdk by running `nw install 0.25.0-sdk`
 * Install project dependencies by running `npm install`
 * Install `npm install -g node-pre-gyp`
 * Install `npm install -g nw-gyp`
-* Most annoying step of all, rebuild the node gRPC dependency for your platform by running something like `npm rebuild grpc --build-from-source --runtime=node-webkit --target=0.22.3 --target_arch=x64 --target_platform=darwin` (set target\_arch and target\_platform to whatever you are building for. See [here](https://github.com/mapbox/node-pre-gyp))
+* Most annoying step of all, rebuild the node gRPC dependency for your platform by running something like `npm rebuild grpc --build-from-source --runtime=node-webkit --target=0.25.0 --target_arch=x64 --target_platform=darwin` (set target\_arch and target\_platform to whatever you are building for. See [here](https://github.com/mapbox/node-pre-gyp))
 * Run omgRPC by running `nw .`
 
 To be able to run the repo's example gRPC service (which is fully optional) you must have [Go](https://golang.org/) installed, along with all of the example's required dependencies. If you need help with this, let me know. This miniature Go project is a little different than your average Go project because it might not be in your normal GOPATH.
@@ -44,7 +44,7 @@ There is an example gRPC service (written in Go) that can be used (and altered) 
 
 I am sure there is a better way to do this (and one that will utilize minification better). 
 
-For now I am just using a tool called [nwjs-builder](https://www.npmjs.com/package/nwjs-builder). You can run `./build.sh`, which runs a gulp file that mostly just copies everything it needs into a `build` folder, then runs this command: `nwb nwbuild -v 0.22.3-sdk -p osx64,win64,linux64 ./build/ -o dist`. It drops the built resources into a folder called `dist`.
+For now I am just using a tool called [nw-builder](https://github.com/nwjs-community/nw-builder). You can run `./build.sh`, which runs a gulp file that mostly just copies everything it needs into a `build` folder, then runs this command: `nwbuild -v 0.25.0 -p osx64 ./build/ -o dist`. It drops the built resources into a folder called `dist`.
 
 #### Some Miscellaneous Notes
 * Import statements in the proto file need to be relative to the proto file from some shared root path.
