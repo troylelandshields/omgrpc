@@ -2,6 +2,7 @@
 
 const url = require('url');
 const dns = require('dns');
+const shellPath = require('shell-path');
 
 const execFileSync = require('child_process').execFileSync;
 const spawn = require('child_process').spawn;
@@ -37,6 +38,15 @@ function KubernetesSvc() {
 	let kubectlExists = function() {
 		if (kubectlExistsCached !== null) {
 			return kubectlExistsCached;
+		}
+
+		if (process.platform == 'darwin') {
+			process.env.PATH = shellPath.sync() || [
+				'./node_modules/.bin',
+				'/.nodebrew/current/bin',
+				'/usr/local/bin',
+				process.env.PATH
+			].join(':');
 		}
 
 		try {
