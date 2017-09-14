@@ -35,7 +35,15 @@ function AppController ($scope, GrpcSvc, StorageSvc)
           return
       }
 
-      GrpcSvc.parseProtofile(recentFile, true);
+      try {
+        // try to load the cached proto file
+        GrpcSvc.parseProtofile(recentFile, true);
+
+      } catch(err) {
+
+        console.log(`unable to parse recent proto file: ${err} ${recentFile.path} ${recentFile.name}`);
+
+      }
 
       $scope.$apply();
     });

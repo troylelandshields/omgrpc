@@ -7,9 +7,9 @@ angular
   .module('app')
   .controller('ClientController', ClientController);
 
-NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc'];
+NewController.$inject = ['GrpcSvc', '$stateParams', '$scope', 'StorageSvc', 'KubernetesSvc'];
 
-function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
+function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, KubernetesSvc) {
   var vm = this;
 
   var transformers = {};
@@ -55,8 +55,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
 
   vm.connectClient = async function(addr) {
     
+    let done = function() {
+        vm.disconnectClient();
+        $scope.$apply();
+    };
+
     var server;
-    await kubernetes.resolvable(addr).then(result => {
+    await KubernetesSvc.resolvable(addr, done).then(result => {
       server = result;
     }, error =>{
       console.log(error);
@@ -83,7 +88,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     vm.client = null;
     vm.connection = {
       hasConnection: false,
-      addr: "127.0.0.1:9000",
+      addr: vm.connection.addr,
       targetnameoveride: ""
     };
     
@@ -121,7 +126,7 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     }
   }
 
-  vm.kubernetesCapable = kubernetes.kubectlExists
+  vm.kubernetesCapable = KubernetesSvc.kubectlExists
 
   vm.kubernetesSettings = function() {
     alert('here');
@@ -234,6 +239,10 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     vm.stream.isConnected = false;
   }
 
+  vm.toggleTooltip = function() {
+    vm.showTooltip = !vm.showTooltip;
+  }
+
   function schemaFromProto(field) {
 
     // gonna treat bytes as string until viewify supports files
@@ -332,13 +341,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc) {
     $('#upload-file-info').html(filename);
   }
 
-  $scope.kubectlExists = kubernetes.kubectlExists;
+  $scope.kubectlExists = KubernetesSvc.kubectlExists;
 
-  $scope.kubectlContexts = kubernetes.kubectlContexts();
+  $scope.kubectlContexts = KubernetesSvc.kubectlContexts();
   $scope.kubectlSelectedContext = $scope.kubectlContexts[0];
 
   $scope.kubectlContextChange = function($event) {
-    kubernetes.setContext($scope.kubectlSelectedContext.name);
+    KubernetesSvc.setContext($scope.kubectlSelectedContext.name);
   };
 
 }
