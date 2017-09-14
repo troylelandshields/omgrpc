@@ -147,6 +147,12 @@ button {
   margin-top: 10px;
 }
 
+.alert > button {
+  position: relative;
+  top: -13px;
+  left: 5px;
+}
+
 .tabs-container {
   width: 60%;
 }
