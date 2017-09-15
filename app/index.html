@@ -25,31 +25,26 @@
         <!--<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon"/><link rel="icon" href="images/favicon.ico" type="image/x-icon"/>-->
     </head>
     <body>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="nav well" ng-controller="NavController as vm">
-                    <div class="btn-group-vertical" role="group">
-                        <button type="button" class="btn btn-primary" ui-sref="new">Open Protofile</button>
-                        <div ng-repeat="proto in vm.protos">
-                            <div class="padding-top-sm" ng-repeat="svc in proto.services">
-                                <button type="button" class="btn btn-default" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
-                                <button type="button" class="btn btn-danger btn-xs">
-                                    <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="container">
-                <div class="page-header">
-                    <h1>omgRPC</h1>
-                </div>
-
-                <div ui-view="guest">
+    <div class="title-container">
+        <h1 class="main-title">omgRPC</h1>
+        <button type="button" class="btn btn-outline-primary" ui-sref="new">New Protofile</button>
+    </div>
+    <div ng-controller="NavController as vm">
+        <div class="proto-group" role="group">
+            <div ng-repeat="proto in vm.protos">
+                <div class="proto" ng-repeat="svc in proto.services">
+                    <button type="button" class="btn btn-outline-secondary" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
+                    <button type="button" class="btn btn-danger btn-xs">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div ui-view="guest">
+    </div>
+
     <footer>
         <div class="container">
             <p class="text-muted">Made with extreme carelessness.</p>
@@ -62,7 +57,6 @@
     <script src="../node_modules/angular/angular.min.js"></script>
     <script src="../node_modules/angular-sanitize/angular-sanitize.min.js"></script>
     <script src="../node_modules/angular-ui-router/release/angular-ui-router.min.js"></script>
-    <script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../node_modules/dropzone/dist/min/dropzone.min.js"></script>
     <script src="../node_modules/ngdropzone/dist/ng-dropzone.min.js"></script>
     <script src="../node_modules/viewify/viewify.js"></script>
