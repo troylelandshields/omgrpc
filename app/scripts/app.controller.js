@@ -20,6 +20,7 @@ function AppController ($scope, GrpcSvc, StorageSvc)
 
   // window.client = client
 
+
   $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
     analytics.screenView(toState.name);
   });

@@ -4,9 +4,9 @@ angular
   .module('app')
   .controller('NewController', NewController);
 
-NewController.$inject = ['GrpcSvc', '$state'];
+NewController.$inject = ['GrpcSvc'];
 
-function NewController (GrpcSvc, $state)
+function NewController (GrpcSvc)
 {
     var vm = this;
     vm.newConnection = {

@@ -33,10 +33,11 @@
         <div class="proto-group" role="group">
             <div ng-repeat="proto in vm.protos">
                 <div class="proto" ng-repeat="svc in proto.services">
-                    <button type="button" class="btn btn-outline-secondary" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</button>
-                    <button type="button" class="btn btn-danger btn-xs">
-                        <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
-                    </button>
+                    <div type="button" class="btn btn-outline-secondary" ng-disabled="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id" ng-class="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id ? 'disabled' : ''" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}
+                        <button type="button" class="btn btn-danger btn-xs">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
