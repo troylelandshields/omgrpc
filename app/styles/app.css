@@ -26,18 +26,40 @@ footer {
   height: 60px;
   background-color: #f5f5f5; }
 
+button {
+  cursor: pointer;
+}
+
 .container {
   width: auto;
-  max-width: 680px;
   padding: 0 15px; }
 
 .container .text-muted {
   margin: 20px 0; }
 
+.main-container {
+  display: flex;
+  justify-content: space-around;
+}
+
+.title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #979797;
+  padding: 25px 25px 0;
+}
+
+.main-title {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #202A36;
+}
+
 .menu {
   margin-top: 80px; }
   .menu a {
-    margin: 0 10px 0 0; }
+    margin: 0 10px 0 0;
+  }
 
 .padding-top {
   margin-top: 10px; 
@@ -51,14 +73,142 @@ footer {
   padding: 35px;
 }
 
-.grpc-input {
-  height: 175px;
-  width: 100%;
-  resize: vertical;
+.nav-top {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 
+.grpc-input {
+  resize: vertical;
+  height: 175px;
+  width: 80%;
+  border-color: #979797;
+  border-radius: 5px;
+}
 
-pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+.send-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 80%;
+  margin-top: 10px;
+}
+
+.form-container {
+  width: 25%;
+  height: 65%;
+  margin-left: 5%;
+  border-right: 1px solid #979797;
+  padding-right: 25px;
+}
+
+.form-container > button {
+  margin-top: 20px;
+}
+
+.form-title {
+  width: 60%;
+  color: #202A36;
+  border-bottom: 1px solid #979797;
+}
+
+.label-title {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.ip-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.ip-input {
+  width: 50%;
+  margin-right: 10px;
+}
+
+.drop-down {
+  margin-bottom: 20px;
+}
+
+.drop-down-container {
+  display: flex;
+  align-items: center;
+}
+
+.drop-down-container > select {
+  width: 75% !important;
+  margin-right: 5px;
+}
+
+.checkbox {
+  margin-left: 10px;
+}
+.checkbox-label {
+  position: relative;
+  top: 2px;
+  left: 3px;
+}
+
+.target-override > button {
+  margin-top: 10px;
+}
+
+.alert > button {
+  position: relative;
+  top: -13px;
+  left: 5px;
+}
+
+.tabs-container {
+  width: 60%;
+}
+
+.panel {
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 20px 0 0 20px;
+}
+
+.cat-title {
+  width: 20%;
+  border-bottom: 1px solid #979797;
+  margin-bottom: 5px;
+}
+
+.add-meta-btn-container {
+  margin-bottom: 25px;
+}
+
+.key-value {
+  display: flex;
+  align-items: center;
+}
+
+.key-value input {
+  width: 25%;
+  margin-right: 5px;
+  border-radius: 5px;
+}
+
+.add-meta-btn {
+  margin-top: 10px;
+}
+
+.btn-send {
+  margin: 0 10px 10px 0;
+}
+
+.btn-connect-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 55%;
+  margin: 0 0 20px;
+}
+
+pre {border: 1px solid #979797; padding: 5px; width: 80%;}
 .string { color: green; }
 .number { color: darkorange; }
 .boolean { color: blue; }
@@ -68,5 +218,58 @@ pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
 
 td {
   padding: 3px;
+}
+
+/*Color override*/
+.btn-outline-primary {
+  color: #0E4B80;
+  border-color: #0E4B80;
+  background-color: transparent;
+}
+.btn-outline-primary:hover, .btn-outline-primary:active {
+  color: #fff;
+  border-color: #0E4B80;
+  background-color: #0E4B80;
+}
+.btn-outline-secondary {
+  color: #202A36;
+  border-color: #979797;
+  background-color: transparent;
+}
+.btn-outline-secondary:hover,
+.btn-outline-secondary:active {
+  color: #fff;
+  background-color: #979797;
+}
+.btn-outline-danger {
+  color: #DF283B;
+  background-color: transparent;
+  border-color: #DF283B;
+}
+.btn-outline-danger:hover,
+.btn-outline-danger:active {
+  color: #fff;
+  background-color: #DF283B;
+}
+.btn-outline-success {
+  color: #31D74F;
+  background-color: transparent;
+  border-color: #31D74F;
+}
+.btn-outline-success:hover,
+.btn-outline-success:active,
+.btn-outline-success:focus {
+  color: #fff;
+  background-color: #31D74F;
+}
+
+.btn-xs {
+  height: 25px;
+  width: 25px;
+  padding: 0;
+}
+
+button:focus {
+  outline: none !important;
 }
 
