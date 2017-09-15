@@ -379,7 +379,7 @@ function KubernetesSvc() {
 		// loop through ports and find port that matches either port name or port number
 		for (var i in ports) {
 			var p = ports[i];
-			if (p.nodePort === port || p.name === port) {
+			if (p.nodePort === port || p.name === port || p.port == port) {
 				resp.nodePort = p.nodePort;
 				resp.targetPort = p.targetPort;
 				return resp;
