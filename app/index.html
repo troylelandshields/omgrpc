@@ -33,9 +33,9 @@
         <div class="proto-group" role="group">
             <div ng-repeat="proto in vm.protos">
                 <div class="proto" ng-repeat="svc in proto.services">
-                    <div type="button" class="btn btn-outline-secondary" ng-disabled="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id" ng-class="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id ? 'disabled' : ''" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}
-                        <button type="button" class="btn btn-danger btn-xs">
-                            <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="vm.removeProto(proto)"></span>
+                    <div type="button" class="btn btn-outline-secondary" ng-disabled="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id" ng-class="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id ? 'disabled' : ''" ui-sref="client({protoID:proto.id, serviceID: svc.id})">{{svc.name}}</span>
+                        <button type="button" class="btn btn-danger btn-xs" ng-disabled="vm.currentStateParams.protoID === proto.id && vm.currentStateParams.serviceID === svc.id" ng-click="vm.removeProto(proto); $event.stopPropagation();">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
