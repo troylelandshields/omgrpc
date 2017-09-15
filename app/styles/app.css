@@ -81,9 +81,18 @@ button {
 }
 
 .grpc-input {
-  height: 175px;
-  width: 100%;
   resize: vertical;
+  height: 175px;
+  width: 80%;
+  border-color: #979797;
+  border-radius: 5px;
+}
+
+.send-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 80%;
+  margin-top: 10px;
 }
 
 .form-container {
@@ -199,7 +208,7 @@ button {
   margin: 0 0 20px;
 }
 
-pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+pre {border: 1px solid #979797; padding: 5px; width: 80%;}
 .string { color: green; }
 .number { color: darkorange; }
 .boolean { color: blue; }

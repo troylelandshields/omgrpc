@@ -93,8 +93,7 @@
                         <div id="viewify-container" class="padding-top"></div>
                     </div>
                 </div>
-
-                <div class="padding-top pull-right" ng-if="!vm.selectedMethod.isStream">
+                <div class="send-btn-container" ng-if="!vm.selectedMethod.isStream">
                     <button type="button" class="btn-send btn btn-outline-primary" ng-click="vm.execute(vm.selectedMethod)">Send</button>
                 </div>
 
@@ -109,16 +108,13 @@
                     </div>
                 </div>
 
-                <div class="row" ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
-                    <div class="col-md-10">
-                        <h4 ng-if="vm.result != null">Response</h4>
-                        <div>
-                            <div ng-if="vm.result != null">
-                                <pre ng-bind-html="vm.result | prettify"></pre>
-                            </div>
+                <div ng-if="!vm.selectedMethod.isStream || vm.stream.isConnected">
+                    <div class="cat-title" ng-if="vm.result != null">Response</div>
+                        <div ng-if="vm.result != null">
+                            <pre ng-bind-html="vm.result | prettify"></pre>
                         </div>
-                    </div>
                 </div>
+
             </div>
         </div>
     </div>
