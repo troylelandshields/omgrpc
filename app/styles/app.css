@@ -73,11 +73,14 @@ button {
   padding: 35px;
 }
 
-.nav-top {
+.proto-group {
   display: flex;
   justify-content: center;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin: 15px 0 25px;
+}
+
+.proto {
+  margin-right: 10px;
 }
 
 .grpc-input {
