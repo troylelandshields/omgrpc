@@ -119,7 +119,12 @@ function GrpcSvc(StorageSvc) {
         return state.servicesByServiceID[serviceID];
     }
 
-    function parseResolvedType(grpcType) {
+    function parseResolvedType(grpcType, depth) {
+        // we track depth in case there's a recursive message we'll give up on it before getting a stack overflow--I'm sure we can handle this in a better way
+        if (!depth) {
+            depth = 1;
+        }
+
         if (grpcType.className == "Enum") {
             return {
                 name: grpcType.name,
@@ -139,8 +144,8 @@ function GrpcSvc(StorageSvc) {
 
         var fields = grpcType._fields.map(function(f){
             var t
-            if (f.resolvedType) {
-                t = parseResolvedType(f.resolvedType);
+            if (f.resolvedType && depth < 4) {
+                t = parseResolvedType(f.resolvedType, parsedTypes);
             } else {
                 t = f.type.name;
             }
