@@ -32,7 +32,6 @@
     "pouchdb": "^6.2.0",
     "shell-path": "^2.1.0",
     "uuid-parse": "^1.0.0",
-    "uuid-validate": "0.0.2",
     "viewify": "1.0.3"
   },
   "devDependencies": {
