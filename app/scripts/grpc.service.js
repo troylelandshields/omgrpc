@@ -270,21 +270,3 @@ function GrpcSvc(StorageSvc) {
         createClient: createClient
     }
 }
-
-/*
-    binary.load
-    cli->pbjs->cli
-
-    var builder = ProtoBuf.loadProtoFile(node_path.join("..", "..", "..", "src", "google", "protobuf", "descriptor.proto")),
-        FileDescriptorSet = builder.build("google.protobuf.FileDescriptorSet");
-    var fds = FileDescriptorSet.decode(data),
-        imports = [];
-    var json = {
-        "package": null,
-        "imports": imports
-    };
-    fds.file.forEach(function(fdp) {
-        imports.push(buildFileDescriptorProto(fdp));
-    });
-    return json;
-*/
