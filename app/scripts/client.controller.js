@@ -1,7 +1,7 @@
 'use strict';
 
 const uuidParse = require('uuid-parse');
-const uuidValidate = require('uuid-validate');
+// const uuidValidate = require('uuid-validate');
 
 angular
   .module('app')
@@ -32,9 +32,12 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, Kubernetes
 
     if (field.type && field.type == "bytes") {
       transformers[field.name] = function(str){ 
-        if (uuidValidate(str)) {
-          var parsedUUID = uuidParse.parse(str);
-          return new Buffer(parsedUUID);
+
+        try {
+          str = isUUID(str);
+          return new Buffer(str, "hex");
+        } catch(e) {
+          console.log("string is not a UUID: " + str)
         }
 
         return new Buffer(str, "base64"); 
@@ -350,4 +353,24 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, Kubernetes
     KubernetesSvc.setContext($scope.kubectlSelectedContext.name);
   };
 
+}
+
+
+// Regular expression used for basic validation of a uuid.
+var uuidPattern = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
+
+function isUUID (str) {
+
+    if (Object.prototype.toString.call(str) !== '[object String]') {
+      throw('not a string');
+    }
+
+    // Test against uuid regex
+    if (!uuidPattern.test(str)) {
+        throw('not a UUID')
+    }
+
+    // strip out dashes
+    str = str.replace('-', '')
+    return str
 }
