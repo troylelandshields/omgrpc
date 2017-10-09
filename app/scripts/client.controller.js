@@ -1,7 +1,6 @@
 'use strict';
 
 const uuidParse = require('uuid-parse');
-// const uuidValidate = require('uuid-validate');
 
 angular
   .module('app')
