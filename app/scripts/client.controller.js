@@ -354,7 +354,6 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, Kubernetes
 
 }
 
-
 // Regular expression used for basic validation of a uuid.
 var uuidPattern = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 
