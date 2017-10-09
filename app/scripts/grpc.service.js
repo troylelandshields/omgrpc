@@ -84,7 +84,7 @@ function GrpcSvc(StorageSvc) {
             var attempts = 10;
             var r = path.dirname(origin);
             while (true) {
-                
+
                 fn = path.join(r, target);
                 if (fs.existsSync(fn)) {
                     return fn;
@@ -92,6 +92,9 @@ function GrpcSvc(StorageSvc) {
 
                 r = path.dirname(r);
                 attempts = attempts - 1;
+                if (attempts <= 0) {
+                    return;
+                }
             }
         }
 
