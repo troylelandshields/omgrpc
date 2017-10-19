@@ -152,9 +152,13 @@ function ClientController (GrpcSvc, $stateParams, $scope, StorageSvc, Kubernetes
               // try to convert to UUID. If your data was exactly 16 bytes and not a UUID, uhm... sorry :/
               if (obj[key].byteLength == 16) {
                 var parsed = uuidParse.unparse(obj[key]);
-                if (uuidValidate(parsed)) {
-                  obj[key] = parsed;
-                  return
+                try {
+                  if (isUUID(parsed)) {
+                    obj[key] = parsed;
+                    return
+                  }
+                } catch (e) {
+                  console.log("not a UUID", parsed);
                 }
               }
 
@@ -369,6 +373,6 @@ function isUUID (str) {
     }
 
     // strip out dashes
-    str = str.replace('-', '')
+    str = str.split('-').join('');
     return str
 }
