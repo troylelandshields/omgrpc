@@ -11,7 +11,7 @@ var analytics = {
     clientID: null,
     userID: null,
 	appName: 'omgrpc',
-	appVersion: 'v0.2.2',
+	appVersion: 'v0.2.3',
 	debug: false,
 	performanceTracking: true,
 	errorTracking: true,
