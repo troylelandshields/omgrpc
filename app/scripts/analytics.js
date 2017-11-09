@@ -20,11 +20,22 @@ var analytics = {
     lastScreenName: '',
 
     sendRequest: function(data, callback){
-        if(!this.clientID || this.clientID == null)
+        if(!this.clientID || this.clientID == null) {
             this.clientID = this.generateClientID();
+        }
 
-        if(!this.userID || this.userID == null)
-            this.userID = this.generateClientID();
+        if(!this.userID || this.userID == null) {
+            // check local storage for client id
+            let userID = localStorage.getItem("userID");
+            
+            // if not one, generate it and store it
+            if (!userID) {
+                userID = this.generateClientID();
+                localStorage.setItem("userID", userID);
+            }
+
+            this.userID = userID;
+        }
 
         var postData = "v="+this.apiVersion
                         +"&tid="+this.trackID
@@ -74,9 +85,9 @@ var analytics = {
     },
     generateClientID: function()
     {
-        var id = "";
+        var id = "u-";
         var possibilities = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for( var i=0; i < 5; i++ )
+        for( var i=0; i < 15; i++ )
             id += possibilities.charAt(Math.floor(Math.random() * possibilities.length));
         return id;
     },
