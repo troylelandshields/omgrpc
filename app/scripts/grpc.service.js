@@ -145,8 +145,7 @@ function GrpcSvc(StorageSvc) {
         var fields = grpcType._fields.map(function(f){
             var t
             if (f.resolvedType && depth < 4) {
-                depth++;
-                t = parseResolvedType(f.resolvedType, depth);
+                t = parseResolvedType(f.resolvedType, depth+1);
             } else {
                 t = f.type.name;
             }
