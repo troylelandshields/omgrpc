@@ -2,6 +2,8 @@
 
 let grpc = require('grpc')
 
+var ProtoBuf = require('protobufjs');
+
 const path = require('path');
 const fs = require('fs');
 
@@ -22,15 +24,25 @@ function GrpcSvc(StorageSvc) {
 
         Object.keys(proto)
             .filter(function(key){
-                return key != "$$hashKey"
+                if (key == "$$hashKey") {
+                    return false
+                }
+
+                return true;
             })
             .map(function(pkgName){
                 return proto[pkgName];
             })
             .forEach(function(pkg){
+
                 let s = Object.keys(pkg)
                     .filter(function(key){
-                        return pkg[key].service
+                        try {
+                            return pkg[key].service
+                        } catch(e) {
+                            console.log(e);
+                            return false;
+                        }
                     });
 
                 if (s.length === 0) {
@@ -55,42 +67,51 @@ function GrpcSvc(StorageSvc) {
     function findRoot(root, relPath, attempts) {
 
         var parsed
-        try {
-            var file = {
-                root: root,
-                file: relPath
-            };
 
-            // check if file exists
-            if (!fs.existsSync(path.join(root, relPath))) {
-               throw('file does not exist');
+        // check if file exists
+        var fn = path.join(root, relPath);
+        if (!fs.existsSync(fn)) {
+           throw('file does not exist');
+        }
+
+        var rootPB = new ProtoBuf.Root();
+        // http://dcode.io/protobuf.js/Root.html#resolvePath
+        rootPB.resolvePath = function(origin, target) {
+            if (!origin) {
+                return target;
             }
 
-            parsed = grpc.load(file);
-        } catch (e) {
+            var attempts = 10;
+            var r = path.dirname(origin);
+            while (true) {
 
-            if (attempts > 0) {
-                let newRoot = path.dirname(root);
-                let newRelPath = path.join(root, relPath).replace(newRoot, "");
-
-                if (newRelPath[0] == path.sep) {
-                    newRelPath = newRelPath.substring(1);
+                fn = path.join(r, target);
+                if (fs.existsSync(fn)) {
+                    return fn;
                 }
 
-                return findRoot(newRoot, newRelPath, attempts-1);
+                r = path.dirname(r);
+                attempts = attempts - 1;
+                if (attempts <= 0) {
+                    return;
+                }
             }
-
-            throw (e);
         }
+
+        rootPB.loadSync(fn);
+
+        parsed = grpc.loadObject(rootPB);
 
         return parsed
     }
 
     function parseProtofile(protoFile, skipSave) {
-        console.log("protofile", protoFile);
+
         let parsed = findRoot(path.dirname(protoFile.path), protoFile.name, protoFile.path.split(path.sep).length);
 
-        parsed.services = parseServices(parsed)
+        let service = parseServices(parsed);
+
+        parsed.services = service;
 
         if (parsed.services.length === 0) {
             console.log("did not get any services from proto file");
