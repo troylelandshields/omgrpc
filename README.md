@@ -2,7 +2,7 @@
 
 [TL;DR] - omgRPC is dead; long live [grpc-json-proxy](https://github.com/jnewmano/grpc-json-proxy).
 
-omgrpc was built because of frustration that we felt at Weave while transitioning from REST to gRPC. Lack of tooling like Postman made it hard to test or feel confident about services we were working on. So, one night while my wife was working late I put together a proof-of-concept for a project that could dynamically load a protobuf file to let you interact with a gRPC server: omgRPC. This project has gotten very little TLC since then, but it helped us a lot at Weave while we were becoming more comfortable with gRPC. 
+omgrpc was built because of frustration that we felt at [Weave](https://www.getweave.com/) while transitioning from REST to gRPC. Lack of tooling like Postman made it hard to test or feel confident about services we were working on. So, one night while my wife was working late I put together a proof-of-concept for a project that could dynamically load a protobuf file to let you interact with a gRPC server: omgRPC. This project has gotten very little TLC since then, but it helped us a lot at Weave while we were becoming more comfortable with gRPC. 
 
 While it was nice to fantasize about adding many more Postman-like features to omgRPC, the fact is that Postman is just awesome and this little side-project was never going to catch up to that. 
 
