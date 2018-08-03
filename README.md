@@ -1,3 +1,15 @@
+# Read this please!
+
+[TL;DR] - omgRPC is dead; long live [grpc-json-proxy](https://github.com/jnewmano/grpc-json-proxy).
+
+omgrpc was built because of frustration that we felt at Weave while transitioning from REST to gRPC. Lack of tooling like Postman made it hard to test or feel confident about services we were working on. So, one night while my wife was working late I put together a proof-of-concept for a project that could dynamically load a protobuf file to let you interact with a gRPC server: omgRPC. This project has gotten very little TLC since then, but it helped us a lot at Weave while we were becoming more comfortable with gRPC. 
+
+While it was nice to fantasize about adding many more Postman-like features to omgRPC, the fact is that Postman is just awesome and this little side-project was never going to catch up to that. 
+
+Recently, another member of our team (and contributor to omgrpc) has found a _very_ convenient way to use Postman to interact with gRPC servers. I'll let him explain the mechanics to you [here](https://medium.com/@jnewmano/grpc-postman-173b62a64341). 
+
+While I encourage you to star this repo (obviously), use it as it's useful, and make any contributions you want, you are probably better off using jnewmano's [grpc-json-proxy](https://github.com/jnewmano/grpc-json-proxy) to enable you to continue to use HTTP tools you know and love like `curl` or Postman.
+
 # omgrpc
 
 omgRPC aims to be a GUI client for interacting with gRPC services, similar to what Postman is for REST APIs.
